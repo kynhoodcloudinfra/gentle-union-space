@@ -1,47 +1,98 @@
 
 
-# Plan: Avatar System for Raja Quiz
+# Plan: Raja Quiz — Full App Build
 
-## Summary
-Generate 50 unique Tamil-cinema-themed avatar images as SVG components and implement the avatar system with persistence logic.
+This is a large build covering database setup, avatar generation, 4 pages, theming, and seed data. Here is the complete implementation plan.
 
 ## What Gets Built
 
-### 1. Generate 50 SVG Avatar Components
-Create a programmatic SVG avatar generator script that produces 50 unique avatars themed around Illayaraja/Tamil cinema. Each avatar will be a distinct combination of:
-- **Shapes**: Musical instruments (veena, mridangam, flute, harmonium), film reels, microphones, vintage radios, clapperboards, vinyl records, speaker cones, headphones, music notes, film cameras
-- **Color palettes**: Warm golds, burnt oranges, deep maroons, cinematic teals — matching the app's vintage Tamil cinema theme
-- **Backgrounds**: Varied solid circle backgrounds
+### 1. Database (3 tables via migrations)
+- **questions**: day_number, question_text, options A-D, correct_answer, question_type, month
+- **submissions**: phone_number, name, question_id (FK), day_number, answer_given, is_correct, time_taken_seconds, month
+- **leaderboard**: composite PK (phone_number, month), total_score, streak, last_played_date, avatar_id
+- All tables with permissive RLS (public read/write). DELETE on questions, UPDATE on leaderboard.
 
-Avatars will be stored as individual SVG files in `src/assets/avatars/` (avatar-1.svg through avatar-50.svg) for lightweight, scalable rendering.
+### 2. Avatar System (50 SVG assets)
+- Node.js script generates 50 unique Tamil-cinema-themed SVGs (instruments, film reels, microphones, vintage radios, etc.) with warm gold/maroon/teal palette
+- Stored as `src/assets/avatars/avatar-1.svg` through `avatar-50.svg`
+- `src/lib/avatars.ts` — utility with `getRandomAvatarId()`, avatar import map
+- `src/components/AvatarDisplay.tsx` — circular thumbnail component
 
-### 2. Avatar Component (`src/components/Avatar.tsx`)
-- Accepts `avatarId` prop (1-50)
-- Renders circular thumbnail at configurable sizes
-- Fallback for missing/invalid IDs
-- Lazy-loads the SVG asset
+### 3. Design Theme
+- Update `index.css` with Tamil cinema color palette (navy bg, gold accents, maroon touches)
+- Add Google Fonts: Playfair Display (headings), Inter (body), Noto Sans Tamil
+- Film grain CSS overlay, gold text-shadow effects, ornamental dividers
+- Film-strip timer aesthetic with sprocket holes
 
-### 3. Avatar Utility (`src/lib/avatars.ts`)
-- Map of avatar IDs to imported SVG paths
-- `getAvatarUrl(id: number)` helper
-- `getRandomAvatarId()` for first-time assignment
+### 4. User Context
+- `src/contexts/UserContext.tsx` — reads `phoneNumber` and `name` from URL search params
+- Entry form component shown when params missing, redirects with params after submission
 
-### 4. Database Integration
-- Leaderboard table includes `avatar_id` column
-- On first play: assign random avatar_id, persist to leaderboard
-- On new month entry: look up avatar_id from any previous month's entry for same phone number
-- Avatar displayed on leaderboard rows next to player names
+### 5. Pages & Routes
 
-## Technical Details
+**`/` → redirects to `/home`**
 
-- **50 SVGs generated via a Node.js script** that programmatically creates unique combinations of shapes, colors, and motifs
-- Each SVG is ~1-3KB, total bundle impact minimal (~100KB)
-- No external image hosting needed — all static assets
-- SVGs chosen over PNGs for crisp rendering at any size and smaller file size
+**`/home` — Quiz Page**
+- Fetches today's question (day_number = date, month = YYYY-MM)
+- MCQ mode: 4 styled option buttons; Text mode: input field
+- 30s film-strip countdown timer, auto-submits on expiry
+- Scoring: ≤10s = 150pts, ≤20s = 125pts, else = 100pts, wrong = 0
+- Result card with feedback, score, total, streak
+- Checks for existing submission (no re-play)
+- Updates leaderboard (upsert score, streak logic)
+- Avatar assignment on first play (persists across months)
+
+**`/leaderboard` — Leaderboard Page**
+- "This Month" / "All Time" tabs
+- Rows: avatar, name, score, streak 🔥 (no phone numbers)
+- Current user highlighted
+- Shows user rank at bottom if outside top 20
+- Link back to quiz
+
+**`/admin` — Admin Panel**
+- Password gate (hardcoded `rajaadmin123`, sessionStorage)
+- Single question form + bulk XLSX upload (add `xlsx` npm package)
+- Preview parsed rows before saving
+- Question manager grouped by month, delete individual, "LIVE" badge on today's question
+
+### 6. Seed Data
+- 10 sample Illayaraja trivia questions (mix MCQ + text) for current month via DB insert
+- 15 dummy leaderboard entries with Tamil names and random avatar IDs
+
+### 7. Dependencies to Add
+- `xlsx` (for admin XLSX parsing)
 
 ## Files Created/Modified
-- `/tmp/generate-avatars.js` — one-time generator script
-- `src/assets/avatars/avatar-1.svg` through `avatar-50.svg`
-- `src/components/Avatar.tsx`
-- `src/lib/avatars.ts`
+
+| File | Action |
+|------|--------|
+| `supabase/migrations/*.sql` | Create 3 tables + RLS policies |
+| `/tmp/generate-avatars.js` | One-time SVG generator script |
+| `src/assets/avatars/avatar-{1-50}.svg` | 50 avatar SVGs |
+| `src/lib/avatars.ts` | Avatar utilities |
+| `src/components/AvatarDisplay.tsx` | Avatar component |
+| `src/contexts/UserContext.tsx` | User identity context |
+| `src/components/EntryForm.tsx` | Name+phone entry form |
+| `src/components/FilmStripTimer.tsx` | Countdown timer |
+| `src/components/QuizCard.tsx` | Quiz question display |
+| `src/components/ResultCard.tsx` | Answer result display |
+| `src/components/OrnamentalDivider.tsx` | Decorative divider |
+| `src/pages/Index.tsx` | Redirect to /home |
+| `src/pages/Home.tsx` | Quiz page |
+| `src/pages/Leaderboard.tsx` | Leaderboard page |
+| `src/pages/Admin.tsx` | Admin panel |
+| `src/lib/supabase.ts` | Supabase client + query helpers |
+| `src/index.css` | Theme overhaul |
+| `index.html` | Add Google Fonts |
+| `src/App.tsx` | Add routes + UserContext provider |
+
+## Implementation Order
+1. Generate 50 SVG avatars + avatar utilities
+2. Database migrations (3 tables + RLS)
+3. Theme (CSS, fonts, decorative components)
+4. User context + entry form
+5. Quiz page (timer, scoring, submission logic)
+6. Leaderboard page
+7. Admin page (XLSX upload, question management)
+8. Seed data (10 questions + 15 leaderboard entries)
 
