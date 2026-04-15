@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OrnamentalDivider } from './OrnamentalDivider';
+import maestroImg from '@/assets/maestro.png';
 
 export function EntryForm() {
   const [name, setName] = useState('');
@@ -20,46 +21,54 @@ export function EntryForm() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-sm">
-        <div className="bg-card border border-border rounded-xl p-8 shadow-2xl relative overflow-hidden">
-          {/* Film grain overlay */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
-          }} />
-          
-          <h1 className="font-serif text-3xl text-center text-accent mb-1" style={{
-            textShadow: '0 0 20px hsl(var(--accent) / 0.3)'
-          }}>
-            🎬 Raja Quiz
-          </h1>
-          <p className="text-center text-muted-foreground text-sm mb-4">Illayaraja Fan Club</p>
-          
-          <OrnamentalDivider />
-          
-          <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Your Name</label>
-              <Input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Enter your name"
-                required
-                className="bg-background"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Phone Number</label>
-              <Input
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="Enter phone number"
-                required
-                className="bg-background"
-              />
-            </div>
-            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif text-lg">
-              Enter Quiz
-            </Button>
-          </form>
+        <div className="bg-card border border-border rounded-2xl shadow-2xl relative overflow-hidden film-grain vignette">
+          {/* Maestro Hero Image */}
+          <div className="relative w-full aspect-[4/3] overflow-hidden">
+            <img
+              src={maestroImg}
+              alt="Maestro Ilaiyaraaja"
+              className="w-full h-full object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
+          </div>
+
+          {/* Content */}
+          <div className="px-6 pb-8 -mt-4 relative z-10">
+            <h1 className="font-serif text-3xl text-center text-accent gold-glow mb-0.5">
+              Raja Quiz
+            </h1>
+            <p className="text-center text-muted-foreground text-xs tracking-[0.2em] uppercase mb-3">
+              Illayaraja Fan Club
+            </p>
+
+            <OrnamentalDivider className="my-3" />
+
+            <form onSubmit={handleSubmit} className="space-y-3 mt-4">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block tracking-wide uppercase">Your Name</label>
+                <Input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  required
+                  className="bg-background/50 border-border"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block tracking-wide uppercase">Phone Number</label>
+                <Input
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="Enter phone number"
+                  required
+                  className="bg-background/50 border-border"
+                />
+              </div>
+              <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif text-lg mt-2">
+                Enter Quiz
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
