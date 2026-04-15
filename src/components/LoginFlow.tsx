@@ -41,7 +41,7 @@ export function LoginFlow() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background text-xs">
       <div className="w-full max-w-sm">
         <div className="bg-card border border-border rounded-2xl shadow-2xl relative overflow-hidden film-grain vignette">
           {/* Maestro Hero Image */}
@@ -57,11 +57,11 @@ export function LoginFlow() {
           {/* Content */}
           <div className="px-6 pb-8 -mt-4 relative z-10">
             <h1 className="font-serif text-3xl text-center text-accent gold-glow mb-0.5">
-              Raja Quiz
+              Raaja Riddle
             </h1>
-            <p className="text-center text-muted-foreground text-xs tracking-[0.2em] uppercase mb-3">
-              Illayaraja Fan Club
-            </p>
+            <div className="text-xs text-center font-extralight font-serif text-secondary-foreground tracking-[0.2em] uppercase mb-3">
+              HOW TO NAME IT?<br />(An Ilaiyaraaja Fan Club)&nbsp;
+            </div>
 
             <OrnamentalDivider className="my-3" />
 
