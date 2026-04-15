@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { DisplayNamePrompt } from '@/components/DisplayNamePrompt';
 import { LoginFlow } from '@/components/LoginFlow';
 import { CommunityGatePopup } from '@/components/CommunityGatePopup';
 import { FilmStripTimer } from '@/components/FilmStripTimer';
@@ -30,7 +31,7 @@ interface ResultData {
 }
 
 export default function Home() {
-  const { phoneNumber, name, isIdentified, authStatus, isCommunityMember } = useUser();
+  const { phoneNumber, name, displayName, isIdentified, authStatus, isCommunityMember } = useUser();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
   const [alreadyAnswered, setAlreadyAnswered] = useState(false);
@@ -102,7 +103,7 @@ export default function Home() {
   }
 
   const submitAnswer = useCallback(async (answer: string) => {
-    if (submitting || !question || !phoneNumber || !name) return;
+    if (submitting || !question || !phoneNumber || !displayName) return;
     setSubmitting(true);
     setTimerRunning(false);
 
@@ -113,7 +114,7 @@ export default function Home() {
     // Insert submission
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
-      name,
+      name: displayName,
       question_id: question.id,
       day_number: dayNumber,
       answer_given: answer,
@@ -159,7 +160,7 @@ export default function Home() {
           total_score: existingLb.total_score + score,
           streak: newStreak,
           last_played_date: todayStr,
-          name,
+          name: displayName,
           avatar_id: existingLb.avatar_id ?? avatarId,
         })
         .eq('phone_number', phoneNumber)
@@ -175,7 +176,7 @@ export default function Home() {
     } else {
       await supabase.from('leaderboard').insert({
         phone_number: phoneNumber,
-        name,
+        name: displayName,
         total_score: score,
         streak: 1,
         last_played_date: todayStr,
@@ -194,7 +195,7 @@ export default function Home() {
 
     setAlreadyAnswered(true);
     setSubmitting(false);
-  }, [submitting, question, phoneNumber, name, startTime, dayNumber, month]);
+  }, [submitting, question, phoneNumber, displayName, startTime, dayNumber, month]);
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
@@ -211,6 +212,8 @@ export default function Home() {
   if (!isIdentified) return <LoginFlow />;
 
   if (isCommunityMember === false) return <CommunityGatePopup />;
+
+  if (!displayName) return <DisplayNamePrompt />;
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center">
@@ -256,7 +259,7 @@ export default function Home() {
               </div>
             </div>
             <div className="mt-6">
-              <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(name!)}`}>
+              <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(displayName!)}`}>
                 <Button variant="outline" className="w-full">View Leaderboard</Button>
               </Link>
             </div>
@@ -323,7 +326,7 @@ export default function Home() {
 
         {/* Navigation */}
         <div className="mt-4 text-center">
-          <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(name!)}`} className="text-accent text-sm hover:underline">
+          <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(displayName!)}`} className="text-accent text-sm hover:underline">
             View Leaderboard →
           </Link>
         </div>
