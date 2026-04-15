@@ -114,7 +114,7 @@ export default function Home() {
     // Insert submission
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
-      name,
+      name: displayName,
       question_id: question.id,
       day_number: dayNumber,
       answer_given: answer,
@@ -160,7 +160,7 @@ export default function Home() {
           total_score: existingLb.total_score + score,
           streak: newStreak,
           last_played_date: todayStr,
-          name,
+          name: displayName,
           avatar_id: existingLb.avatar_id ?? avatarId,
         })
         .eq('phone_number', phoneNumber)
@@ -176,7 +176,7 @@ export default function Home() {
     } else {
       await supabase.from('leaderboard').insert({
         phone_number: phoneNumber,
-        name,
+        name: displayName,
         total_score: score,
         streak: 1,
         last_played_date: todayStr,
@@ -195,7 +195,7 @@ export default function Home() {
 
     setAlreadyAnswered(true);
     setSubmitting(false);
-  }, [submitting, question, phoneNumber, name, startTime, dayNumber, month]);
+  }, [submitting, question, phoneNumber, displayName, startTime, dayNumber, month]);
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
