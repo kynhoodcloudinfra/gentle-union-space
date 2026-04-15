@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
-import { EntryForm } from '@/components/EntryForm';
+import { LoginFlow } from '@/components/LoginFlow';
+import { CommunityGatePopup } from '@/components/CommunityGatePopup';
 import { FilmStripTimer } from '@/components/FilmStripTimer';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Button } from '@/components/ui/button';
