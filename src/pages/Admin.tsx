@@ -124,9 +124,6 @@ export default function Admin() {
   questions.forEach(q => {
     (grouped[q.month] ??= []).push(q);
   });
-    (acc[q.month] ??= []).push(q);
-    return acc;
-  }, {});
 
   return (
     <div className="min-h-screen bg-background p-4">
