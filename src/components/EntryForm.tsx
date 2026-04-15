@@ -49,7 +49,7 @@ export function EntryForm() {
                 <Input
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Enter your name"
+                  placeholder="Enter your display name"
                   required
                   className="bg-background/50 border-border"
                 />
@@ -59,7 +59,7 @@ export function EntryForm() {
                 <Input
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-                  placeholder="Enter your display name"
+                  placeholder="Enter phone number"
                   required
                   className="bg-background/50 border-border"
                 />
