@@ -210,6 +210,7 @@ export default function Home() {
 
   if (!isIdentified) return <LoginFlow />;
 
+  if (isCommunityMember === false) return <CommunityGatePopup />;
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center">
