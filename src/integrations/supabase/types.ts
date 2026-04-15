@@ -14,7 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          avatar_id: number | null
+          last_played_date: string | null
+          month: string
+          name: string
+          phone_number: string
+          streak: number
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_id?: number | null
+          last_played_date?: string | null
+          month?: string
+          name: string
+          phone_number: string
+          streak?: number
+          total_score?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_id?: number | null
+          last_played_date?: string | null
+          month?: string
+          name?: string
+          phone_number?: string
+          streak?: number
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          day_number: number
+          id: string
+          month: string
+          option_a: string | null
+          option_b: string | null
+          option_c: string | null
+          option_d: string | null
+          question_text: string
+          question_type: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          day_number: number
+          id?: string
+          month: string
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
+          question_text: string
+          question_type?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          day_number?: number
+          id?: string
+          month?: string
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
+          question_text?: string
+          question_type?: string
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          answer_given: string | null
+          day_number: number
+          id: string
+          is_correct: boolean
+          month: string
+          name: string
+          phone_number: string
+          question_id: string
+          submitted_at: string
+          time_taken_seconds: number | null
+        }
+        Insert: {
+          answer_given?: string | null
+          day_number: number
+          id?: string
+          is_correct?: boolean
+          month: string
+          name: string
+          phone_number: string
+          question_id: string
+          submitted_at?: string
+          time_taken_seconds?: number | null
+        }
+        Update: {
+          answer_given?: string | null
+          day_number?: number
+          id?: string
+          is_correct?: boolean
+          month?: string
+          name?: string
+          phone_number?: string
+          question_id?: string
+          submitted_at?: string
+          time_taken_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
