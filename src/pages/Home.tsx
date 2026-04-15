@@ -29,7 +29,7 @@ interface ResultData {
 }
 
 export default function Home() {
-  const { phoneNumber, name, isIdentified } = useUser();
+  const { phoneNumber, name, isIdentified, authStatus, isCommunityMember } = useUser();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
   const [alreadyAnswered, setAlreadyAnswered] = useState(false);
@@ -199,7 +199,16 @@ export default function Home() {
     submitAnswer('(timed out)');
   }, [submitAnswer]);
 
-  if (!isIdentified) return <EntryForm />;
+  if (authStatus === 'loading' || authStatus === 'checking_membership') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground font-serif">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isIdentified) return <LoginFlow />;
+
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center">
