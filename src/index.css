@@ -32,18 +32,18 @@
 
     --border: 0 15% 20%;
     --input: 0 15% 20%;
-    --ring: 40 78% 55%;
+    --ring: 30 30% 72%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 20% 10%;
     --sidebar-foreground: 38 40% 85%;
-    --sidebar-primary: 40 78% 55%;
-    --sidebar-primary-foreground: 0 20% 8%;
+    --sidebar-primary: 30 30% 72%;
+    --sidebar-primary-foreground: 0 20% 10%;
     --sidebar-accent: 0 15% 16%;
     --sidebar-accent-foreground: 38 40% 85%;
     --sidebar-border: 0 15% 20%;
-    --sidebar-ring: 40 78% 55%;
+    --sidebar-ring: 30 30% 72%;
 
     --crimson: 0 55% 35%;
     --cream: 35 45% 88%;
@@ -80,7 +80,7 @@
 
 /* Gold text glow */
 .gold-glow {
-  text-shadow: 0 0 20px hsl(40 78% 55% / 0.3), 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 0 20px hsl(30 30% 72% / 0.3), 0 2px 4px rgba(0,0,0,0.5);
 }
 
 /* Vintage vignette */
