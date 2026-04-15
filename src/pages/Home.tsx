@@ -103,7 +103,7 @@ export default function Home() {
   }
 
   const submitAnswer = useCallback(async (answer: string) => {
-    if (submitting || !question || !phoneNumber || !name) return;
+    if (submitting || !question || !phoneNumber || !displayName) return;
     setSubmitting(true);
     setTimerRunning(false);
 
@@ -212,6 +212,8 @@ export default function Home() {
   if (!isIdentified) return <LoginFlow />;
 
   if (isCommunityMember === false) return <CommunityGatePopup />;
+
+  if (!displayName) return <DisplayNamePrompt />;
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center">
