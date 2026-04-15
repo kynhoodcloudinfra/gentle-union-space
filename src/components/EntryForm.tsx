@@ -64,7 +64,7 @@ export function EntryForm() {
                   className="bg-background/50 border-border"
                 />
               </div>
-              <Button type="submit" className="w-full bg-[hsl(345,50%,30%)] text-accent hover:bg-[hsl(345,50%,25%)] font-serif text-lg mt-2 border border-accent/20">
+              <Button type="submit" className="w-full bg-[hsl(345,55%,22%)] text-[hsl(35,40%,85%)] hover:bg-[hsl(345,55%,18%)] font-serif text-lg mt-2 border border-[hsl(35,40%,85%)]/15">
                 Enter Quiz
               </Button>
             </form>
