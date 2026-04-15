@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OrnamentalDivider } from './OrnamentalDivider';
-import maestroImg from '@/assets/maestro.png';
+import maestroImg from '@/assets/maestro.jpg';
 
 export function EntryForm() {
   const [name, setName] = useState('');
