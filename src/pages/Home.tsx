@@ -324,12 +324,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Navigation */}
-        <div className="mt-4 text-center">
-          <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(displayName!)}`} className="text-accent text-sm hover:underline">
-            View Leaderboard →
-          </Link>
-        </div>
       </div>
     </div>
   );
