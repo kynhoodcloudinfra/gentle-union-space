@@ -23,12 +23,11 @@ export function EntryForm() {
       <div className="w-full max-w-sm">
         <div className="bg-card border border-border rounded-2xl shadow-2xl relative overflow-hidden film-grain vignette">
           {/* Maestro Hero Image */}
-          <div className="relative w-full aspect-[4/3] overflow-hidden">
+          <div className="relative w-full aspect-square overflow-hidden">
             <img
               src={maestroImg}
               alt="Maestro Ilaiyaraaja"
-            className="w-full h-full object-cover"
-            style={{ objectPosition: 'center 20%' }}
+              className="w-full h-full object-cover object-bottom"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
           </div>
