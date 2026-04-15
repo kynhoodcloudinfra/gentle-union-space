@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
-import { EntryForm } from '@/components/EntryForm';
+import { LoginFlow } from '@/components/LoginFlow';
+import { CommunityGatePopup } from '@/components/CommunityGatePopup';
 import { FilmStripTimer } from '@/components/FilmStripTimer';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,7 @@ interface ResultData {
 }
 
 export default function Home() {
-  const { phoneNumber, name, isIdentified } = useUser();
+  const { phoneNumber, name, isIdentified, authStatus, isCommunityMember } = useUser();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
   const [alreadyAnswered, setAlreadyAnswered] = useState(false);
@@ -199,7 +200,17 @@ export default function Home() {
     submitAnswer('(timed out)');
   }, [submitAnswer]);
 
-  if (!isIdentified) return <EntryForm />;
+  if (authStatus === 'loading' || authStatus === 'checking_membership') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground font-serif">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isIdentified) return <LoginFlow />;
+
+  if (isCommunityMember === false) return <CommunityGatePopup />;
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center">
