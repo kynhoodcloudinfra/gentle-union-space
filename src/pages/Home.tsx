@@ -259,7 +259,7 @@ export default function Home() {
               </div>
             </div>
             <div className="mt-6">
-              <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(name!)}`}>
+              <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(displayName!)}`}>
                 <Button variant="outline" className="w-full">View Leaderboard</Button>
               </Link>
             </div>
@@ -326,7 +326,7 @@ export default function Home() {
 
         {/* Navigation */}
         <div className="mt-4 text-center">
-          <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(name!)}`} className="text-accent text-sm hover:underline">
+          <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(displayName!)}`} className="text-accent text-sm hover:underline">
             View Leaderboard →
           </Link>
         </div>
