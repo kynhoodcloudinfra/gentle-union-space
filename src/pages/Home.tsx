@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { DisplayNamePrompt } from '@/components/DisplayNamePrompt';
 import { LoginFlow } from '@/components/LoginFlow';
 import { CommunityGatePopup } from '@/components/CommunityGatePopup';
 import { FilmStripTimer } from '@/components/FilmStripTimer';
@@ -30,7 +31,7 @@ interface ResultData {
 }
 
 export default function Home() {
-  const { phoneNumber, name, isIdentified, authStatus, isCommunityMember } = useUser();
+  const { phoneNumber, name, displayName, isIdentified, authStatus, isCommunityMember } = useUser();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
   const [alreadyAnswered, setAlreadyAnswered] = useState(false);
