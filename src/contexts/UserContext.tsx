@@ -7,6 +7,8 @@ type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated' | 'checking_me
 interface UserContextType {
   phoneNumber: string | null;
   name: string | null;
+  displayName: string | null;
+  setDisplayName: (name: string) => void;
   isIdentified: boolean;
   authStatus: AuthStatus;
   isCommunityMember: boolean | null;
@@ -17,6 +19,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType>({
   phoneNumber: null,
   name: null,
+  displayName: null,
+  setDisplayName: () => {},
   isIdentified: false,
   authStatus: 'loading',
   isCommunityMember: null,
@@ -29,6 +33,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<KynUser | null>(null);
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
   const [isCommunityMember, setIsCommunityMember] = useState<boolean | null>(null);
+  const [displayName, setDisplayNameState] = useState<string | null>(null);
+
+  const setDisplayName = useCallback((name: string) => {
+    setDisplayNameState(name);
+  }, []);
 
   // On mount: check for token in URL or existing phoneNumber params
   useEffect(() => {
@@ -93,6 +102,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     <UserContext.Provider value={{
       phoneNumber: user?.phone ?? null,
       name: user?.name ?? null,
+      displayName,
+      setDisplayName,
       isIdentified,
       authStatus,
       isCommunityMember,
