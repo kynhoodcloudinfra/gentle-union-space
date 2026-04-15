@@ -120,7 +120,10 @@ export default function Admin() {
 
   const todayDay = getTodayDayNumber();
   const currentMonth = getCurrentMonth();
-  const grouped = questions.reduce((acc: Record<string, any[]>, q) => {
+  const grouped: Record<string, any[]> = {};
+  questions.forEach(q => {
+    (grouped[q.month] ??= []).push(q);
+  });
     (acc[q.month] ??= []).push(q);
     return acc;
   }, {});
