@@ -27,7 +27,8 @@ export function EntryForm() {
             <img
               src={maestroImg}
               alt="Maestro Ilaiyaraaja"
-              className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover"
+            style={{ objectPosition: 'center 20%' }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
           </div>
