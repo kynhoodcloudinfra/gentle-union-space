@@ -103,18 +103,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   }, [authStatus, user]);
 
-  // Load existing profile from leaderboard once authenticated
+  // Load existing profile from leaderboard once authenticated.
+  // Picks the most recent row (any month) for this phone.
   const loadProfile = useCallback(async (phone: string) => {
     const { data } = await supabase
       .from('leaderboard')
       .select('display_name, profile_image_url, avatar_id, name')
       .eq('phone_number', phone)
-      .not('display_name', 'is', null)
+      .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (data) {
-      setDisplayNameState(data.display_name ?? data.name ?? null);
+      setDisplayNameState(data.display_name ?? null);
       setProfileImageUrlState(data.profile_image_url ?? null);
       setAvatarIdState(data.avatar_id ?? null);
     }
