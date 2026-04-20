@@ -52,7 +52,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Mount: parse token or legacy params
+  // TEMP: Kyn login flow disabled for end-to-end testing — auto-injects a dummy user.
+  // To re-enable real auth, set BYPASS_KYN_AUTH = false.
+  const BYPASS_KYN_AUTH = true;
+
   useEffect(() => {
+    if (BYPASS_KYN_AUTH) {
+      setUser({
+        phone: '9999900001',
+        name: 'Test User',
+        userId: 'dummy_test_user',
+        kynUsername: 'testuser',
+      });
+      setAuthStatus('checking_membership');
+      return;
+    }
+
     const token = searchParams.get('token');
     const phoneNumber = searchParams.get('phoneNumber');
     const name = searchParams.get('name');
