@@ -61,12 +61,21 @@ export default function Index() {
 
   async function checkPlayedToday() {
     if (!phoneNumber) return;
+    // Find the currently active question (if any), then see if user submitted for it
+    const { data: liveQ } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('is_active', true)
+      .maybeSingle();
+    if (!liveQ) {
+      setPlayedToday(false);
+      return;
+    }
     const { data } = await supabase
       .from('submissions')
       .select('id')
       .eq('phone_number', phoneNumber)
-      .eq('day_number', dayNumber)
-      .eq('month', month)
+      .eq('question_id', liveQ.id)
       .maybeSingle();
     setPlayedToday(!!data);
   }
@@ -200,7 +209,7 @@ export default function Index() {
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-[240px] text-xs">
                 <p className="font-serif text-accent mb-1">Points</p>
-                <p className="mb-1.5">≤10s = 150 · ≤20s = 125 · ≤30s = 100</p>
+                <p className="mb-1.5">Points are something you accumulate by playing the games.</p>
                 <p className="font-serif text-accent mb-1">Streak 🔥</p>
                 <p>Consecutive days you've played the riddle.</p>
               </TooltipContent>
