@@ -1,17 +1,18 @@
 import { getAvatarUrl } from '@/lib/avatars';
 
 interface AvatarDisplayProps {
-  avatarId: number | null;
+  avatarId?: number | null;
+  imageUrl?: string | null;
   size?: number;
   className?: string;
 }
 
-export function AvatarDisplay({ avatarId, size = 40, className = '' }: AvatarDisplayProps) {
-  const url = avatarId ? getAvatarUrl(avatarId) : undefined;
+export function AvatarDisplay({ avatarId, imageUrl, size = 40, className = '' }: AvatarDisplayProps) {
+  const url = imageUrl || (avatarId ? getAvatarUrl(avatarId) : undefined);
 
   return (
     <div
-      className={`rounded-full overflow-hidden shrink-0 bg-muted ${className}`}
+      className={`rounded-full overflow-hidden shrink-0 bg-muted ring-1 ring-accent/30 ${className}`}
       style={{ width: size, height: size }}
     >
       {url ? (
