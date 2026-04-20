@@ -58,11 +58,15 @@ export type Database = {
       }
       questions: {
         Row: {
+          activated_at: string | null
           correct_answer: string
           created_at: string
-          day_number: number
+          day_number: number | null
+          expires_at: string | null
+          has_been_live: boolean
           id: string
-          month: string
+          is_active: boolean
+          month: string | null
           option_a: string | null
           option_b: string | null
           option_c: string | null
@@ -71,11 +75,15 @@ export type Database = {
           question_type: string
         }
         Insert: {
+          activated_at?: string | null
           correct_answer: string
           created_at?: string
-          day_number: number
+          day_number?: number | null
+          expires_at?: string | null
+          has_been_live?: boolean
           id?: string
-          month: string
+          is_active?: boolean
+          month?: string | null
           option_a?: string | null
           option_b?: string | null
           option_c?: string | null
@@ -84,11 +92,15 @@ export type Database = {
           question_type?: string
         }
         Update: {
+          activated_at?: string | null
           correct_answer?: string
           created_at?: string
-          day_number?: number
+          day_number?: number | null
+          expires_at?: string | null
+          has_been_live?: boolean
           id?: string
-          month?: string
+          is_active?: boolean
+          month?: string | null
           option_a?: string | null
           option_b?: string | null
           option_c?: string | null
@@ -156,7 +168,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      rotate_active_question: {
+        Args: never
+        Returns: {
+          activated_at: string
+          correct_answer: string
+          day_number: number
+          expires_at: string
+          id: string
+          month: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_text: string
+          question_type: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
