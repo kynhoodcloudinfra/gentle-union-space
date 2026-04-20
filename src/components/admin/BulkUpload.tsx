@@ -23,7 +23,12 @@ export function BulkUpload({ onSaved }: Props) {
         const wb = XLSX.read(evt.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json<QuestionRow>(ws);
-        setParsedRows(rows);
+        // Strip out any legacy day_number/month columns from older files
+        const cleaned = rows.map(r => {
+          const { day_number, month, ...rest } = r as any;
+          return rest as QuestionRow;
+        });
+        setParsedRows(cleaned);
       } catch (err) {
         toast({ title: 'Failed to parse file', description: String(err), variant: 'destructive' });
       }
@@ -31,7 +36,7 @@ export function BulkUpload({ onSaved }: Props) {
     reader.readAsBinaryString(file);
   }
 
-  function updateRow(index: number, field: keyof QuestionRow, value: string | number) {
+  function updateRow(index: number, field: keyof QuestionRow, value: string) {
     setParsedRows(prev => prev.map((r, i) => i === index ? { ...r, [field]: value } : r));
   }
 
@@ -41,7 +46,19 @@ export function BulkUpload({ onSaved }: Props) {
 
   async function saveAll() {
     setSaving(true);
-    const { error } = await supabase.from('questions').insert(parsedRows);
+    // Insert as inactive — system will rotate them in automatically
+    const payload = parsedRows.map(r => ({
+      question_text: r.question_text,
+      option_a: r.option_a ?? null,
+      option_b: r.option_b ?? null,
+      option_c: r.option_c ?? null,
+      option_d: r.option_d ?? null,
+      correct_answer: r.correct_answer,
+      question_type: r.question_type,
+      is_active: false,
+      has_been_live: false,
+    }));
+    const { error } = await supabase.from('questions').insert(payload as any);
     setSaving(false);
     if (error) {
       toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
@@ -61,6 +78,10 @@ export function BulkUpload({ onSaved }: Props) {
         </Button>
       </div>
 
+      <p className="text-xs text-muted-foreground mb-2">
+        Questions go into a pool. The system picks a random one each day automatically — no need to assign dates.
+      </p>
+
       <input
         type="file"
         accept=".xlsx,.xls"
@@ -75,26 +96,16 @@ export function BulkUpload({ onSaved }: Props) {
             <table className="w-full text-xs">
               <thead className="bg-secondary sticky top-0">
                 <tr className="border-b border-border">
-                  <th className="p-2 text-left">Day</th>
                   <th className="p-2 text-left">Question</th>
                   <th className="p-2 text-left">Type</th>
                   <th className="p-2 text-left">Answer</th>
-                  <th className="p-2 text-left">Month</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
               <tbody>
                 {parsedRows.map((r, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td className="p-1.5">
-                      <input
-                        type="number"
-                        value={r.day_number}
-                        onChange={e => updateRow(i, 'day_number', parseInt(e.target.value))}
-                        className="w-12 bg-background border border-input rounded px-1.5 py-1 text-xs"
-                      />
-                    </td>
-                    <td className="p-1.5 max-w-[280px]">
+                    <td className="p-1.5 max-w-[320px]">
                       <input
                         value={r.question_text}
                         onChange={e => updateRow(i, 'question_text', e.target.value)}
@@ -118,13 +129,6 @@ export function BulkUpload({ onSaved }: Props) {
                         className="w-20 bg-background border border-input rounded px-1.5 py-1 text-xs"
                       />
                     </td>
-                    <td className="p-1.5">
-                      <input
-                        value={r.month}
-                        onChange={e => updateRow(i, 'month', e.target.value)}
-                        className="w-20 bg-background border border-input rounded px-1.5 py-1 text-xs"
-                      />
-                    </td>
                     <td className="p-1.5 text-right">
                       <button
                         onClick={() => removeRow(i)}
@@ -139,7 +143,7 @@ export function BulkUpload({ onSaved }: Props) {
             </table>
           </div>
           <Button onClick={saveAll} disabled={saving || parsedRows.length === 0} className="mt-3 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
-            {saving ? 'Saving…' : `Save ${parsedRows.length} to Database`}
+            {saving ? 'Saving…' : `Save ${parsedRows.length} to Pool`}
           </Button>
         </div>
       )}

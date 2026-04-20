@@ -6,10 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
+import { Lock } from 'lucide-react';
 
-interface QuestionRecord {
+export interface QuestionRecord {
   id: string;
-  day_number: number;
+  day_number: number | null;
   question_text: string;
   option_a: string | null;
   option_b: string | null;
@@ -17,7 +18,11 @@ interface QuestionRecord {
   option_d: string | null;
   correct_answer: string;
   question_type: string;
-  month: string;
+  month: string | null;
+  is_active?: boolean;
+  has_been_live?: boolean;
+  activated_at?: string | null;
+  expires_at?: string | null;
 }
 
 interface Props {
@@ -39,6 +44,9 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
 
   if (!form) return null;
 
+  // Lock editing once a question has gone live (or is currently live)
+  const isLocked = !!form.has_been_live;
+
   async function save() {
     if (!form) return;
     setSaving(true);
@@ -52,8 +60,6 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
         option_d: form.option_d,
         correct_answer: form.correct_answer,
         question_type: form.question_type,
-        day_number: form.day_number,
-        month: form.month,
       })
       .eq('id', form.id);
     setSaving(false);
@@ -67,6 +73,11 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
   }
 
   const isMcq = form.question_type === 'mcq';
+  const status = form.is_active
+    ? 'Live'
+    : form.has_been_live
+      ? 'Expired'
+      : 'Upcoming';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -79,23 +90,24 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
 
         <OrnamentalDivider className="my-2" />
 
+        {isLocked && !editing && (
+          <div className="flex items-center gap-2 p-2.5 rounded-md bg-secondary/40 border border-border/50 mb-2 text-xs text-muted-foreground">
+            <Lock size={12} className="text-accent" />
+            This question has gone live — it can no longer be edited or deleted. View only.
+          </div>
+        )}
+
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div>
-              <label className="text-muted-foreground">Day</label>
-              {editing ? (
-                <Input type="number" value={form.day_number} onChange={e => setForm({ ...form, day_number: parseInt(e.target.value) })} className="bg-background h-8" />
-              ) : (
-                <p className="font-serif text-accent">D{form.day_number}</p>
-              )}
+              <label className="text-muted-foreground">Status</label>
+              <p className={`font-serif ${form.is_active ? 'text-destructive' : form.has_been_live ? 'text-muted-foreground' : 'text-accent'}`}>
+                {status}
+              </p>
             </div>
             <div>
-              <label className="text-muted-foreground">Month</label>
-              {editing ? (
-                <Input value={form.month} onChange={e => setForm({ ...form, month: e.target.value })} className="bg-background h-8" />
-              ) : (
-                <p className="font-serif">{form.month}</p>
-              )}
+              <label className="text-muted-foreground">Day</label>
+              <p className="font-serif">{form.day_number ? `D${form.day_number}` : '—'}</p>
             </div>
             <div>
               <label className="text-muted-foreground">Type</label>
@@ -176,9 +188,13 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
                 Cancel
               </Button>
             </>
-          ) : (
+          ) : !isLocked ? (
             <Button onClick={() => setEditing(true)} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
               Edit
+            </Button>
+          ) : (
+            <Button onClick={() => onOpenChange(false)} variant="outline" className="flex-1">
+              Close
             </Button>
           )}
         </div>

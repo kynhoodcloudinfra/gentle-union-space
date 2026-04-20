@@ -200,7 +200,7 @@ export default function Index() {
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-[240px] text-xs">
                 <p className="font-serif text-accent mb-1">Points</p>
-                <p className="mb-1.5">≤10s = 150 · ≤20s = 125 · ≤30s = 100</p>
+                <p className="mb-1.5">Points are something you accumulate by playing the games.</p>
                 <p className="font-serif text-accent mb-1">Streak 🔥</p>
                 <p>Consecutive days you've played the riddle.</p>
               </TooltipContent>

@@ -5,7 +5,7 @@ import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
+import { supabase, getCurrentMonth } from '@/lib/supabase';
 import { getRandomAvatarId } from '@/lib/avatars';
 
 interface Question {
@@ -17,6 +17,8 @@ interface Question {
   option_d: string | null;
   correct_answer: string;
   question_type: string;
+  day_number: number;
+  month: string;
 }
 
 interface ResultData {
@@ -44,9 +46,6 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   const [startTime, setStartTime] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const month = getCurrentMonth();
-  const dayNumber = getTodayDayNumber();
-
   useEffect(() => {
     if (!open || !phoneNumber) return;
     loadQuestion();
@@ -63,12 +62,25 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   async function loadQuestion() {
     setLoading(true);
     try {
+      // Atomically rotate (expire stale + activate next if needed) and return current live question
+      // @ts-ignore — RPC name not in generated types yet
+      const { data: liveRows, error: rpcErr } = await supabase.rpc('rotate_active_question');
+      if (rpcErr) console.error('rotate error', rpcErr);
+
+      const live = Array.isArray(liveRows) && liveRows.length > 0 ? liveRows[0] : null;
+
+      if (!live) {
+        setQuestion(null);
+        setLoading(false);
+        return;
+      }
+
+      // Has the user already answered this specific question?
       const { data: existing } = await supabase
         .from('submissions')
         .select('*, questions(correct_answer)')
         .eq('phone_number', phoneNumber!)
-        .eq('day_number', dayNumber)
-        .eq('month', month)
+        .eq('question_id', live.id)
         .maybeSingle();
 
       if (existing) {
@@ -76,7 +88,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           .from('leaderboard')
           .select('total_score, streak')
           .eq('phone_number', phoneNumber!)
-          .eq('month', month)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         const time = existing.time_taken_seconds ?? 30;
@@ -92,18 +105,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
         return;
       }
 
-      const { data: q } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('day_number', dayNumber)
-        .eq('month', month)
-        .maybeSingle();
-
-      setQuestion(q);
-      if (q) {
-        setTimerRunning(true);
-        setStartTime(Date.now());
-      }
+      setQuestion(live as Question);
+      setTimerRunning(true);
+      setStartTime(Date.now());
     } catch (err) {
       console.error(err);
     }
@@ -114,6 +118,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     if (submitting || !question || !phoneNumber || !displayName) return;
     setSubmitting(true);
     setTimerRunning(false);
+
+    const month = question.month || getCurrentMonth();
+    const dayNumber = question.day_number;
 
     const timeTaken = (Date.now() - startTime) / 1000;
     const isCorrect = answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim();
@@ -202,7 +209,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
     setSubmitting(false);
     onSubmitted?.();
-  }, [submitting, question, phoneNumber, displayName, kynUsername, startTime, dayNumber, month, onSubmitted]);
+  }, [submitting, question, phoneNumber, displayName, kynUsername, startTime, onSubmitted]);
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
@@ -251,8 +258,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : !question ? (
             <div className="text-center py-8">
-              <h3 className="font-serif text-xl text-accent mb-2">No Question Today</h3>
-              <p className="text-muted-foreground text-sm mb-4">Check back tomorrow for the next riddle.</p>
+              <h3 className="font-serif text-xl text-accent mb-2">No Riddle Available</h3>
+              <p className="text-muted-foreground text-sm mb-4">All questions have been played. Check back soon!</p>
               <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
             </div>
           ) : (
