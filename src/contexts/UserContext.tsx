@@ -112,11 +112,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [authStatus, user, profileLoaded, loadProfile]);
 
-  const persistProfileField = useCallback(async (fields: Record<string, unknown>) => {
+  const persistProfileField = useCallback(async (fields: {
+    display_name?: string;
+    name?: string;
+    kyn_username?: string;
+    profile_image_url?: string | null;
+    avatar_id?: number | null;
+  }) => {
     if (!user) return;
     // Update every leaderboard row for this user (across months) so it stays consistent
     await supabase
       .from('leaderboard')
+      // @ts-expect-error — null is allowed by DB but not in the generated types for some fields
       .update(fields)
       .eq('phone_number', user.phone);
   }, [user]);
