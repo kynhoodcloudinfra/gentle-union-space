@@ -1,13 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
-import { DisplayNamePrompt } from '@/components/DisplayNamePrompt';
-import { LoginFlow } from '@/components/LoginFlow';
-import { CommunityGatePopup } from '@/components/CommunityGatePopup';
-import { FilmStripTimer } from '@/components/FilmStripTimer';
-import { OrnamentalDivider } from '@/components/OrnamentalDivider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { FilmStripTimer } from './FilmStripTimer';
+import { OrnamentalDivider } from './OrnamentalDivider';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
 import { getRandomAvatarId } from '@/lib/avatars';
 
@@ -30,11 +27,16 @@ interface ResultData {
   correctAnswer: string;
 }
 
-export default function Home() {
-  const { phoneNumber, name, displayName, isIdentified, authStatus, isCommunityMember } = useUser();
+interface QuizModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmitted?: () => void;
+}
+
+export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
+  const { phoneNumber, displayName, kynUsername } = useUser();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
-  const [alreadyAnswered, setAlreadyAnswered] = useState(false);
   const [result, setResult] = useState<ResultData | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [textAnswer, setTextAnswer] = useState('');
@@ -46,14 +48,21 @@ export default function Home() {
   const dayNumber = getTodayDayNumber();
 
   useEffect(() => {
-    if (!isIdentified) return;
+    if (!open || !phoneNumber) return;
     loadQuestion();
-  }, [isIdentified]);
+    return () => {
+      setQuestion(null);
+      setResult(null);
+      setSelectedAnswer('');
+      setTextAnswer('');
+      setTimerRunning(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, phoneNumber]);
 
   async function loadQuestion() {
     setLoading(true);
     try {
-      // Check existing submission
       const { data: existing } = await supabase
         .from('submissions')
         .select('*, questions(correct_answer)')
@@ -63,8 +72,6 @@ export default function Home() {
         .maybeSingle();
 
       if (existing) {
-        setAlreadyAnswered(true);
-        // Get leaderboard data
         const { data: lb } = await supabase
           .from('leaderboard')
           .select('total_score, streak')
@@ -72,18 +79,19 @@ export default function Home() {
           .eq('month', month)
           .maybeSingle();
 
+        const time = existing.time_taken_seconds ?? 30;
         setResult({
           isCorrect: existing.is_correct,
-          score: existing.is_correct ? (existing.time_taken_seconds <= 10 ? 150 : existing.time_taken_seconds <= 20 ? 125 : 100) : 0,
+          score: existing.is_correct ? (time <= 10 ? 150 : time <= 20 ? 125 : 100) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
+          // @ts-ignore — joined relation
           correctAnswer: existing.questions?.correct_answer ?? '',
         });
         setLoading(false);
         return;
       }
 
-      // Load today's question
       const { data: q } = await supabase
         .from('questions')
         .select('*')
@@ -111,10 +119,11 @@ export default function Home() {
     const isCorrect = answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim();
     const score = isCorrect ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 125 : 100) : 0;
 
-    // Insert submission
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
       name: displayName,
+      display_name: displayName,
+      kyn_username: kynUsername,
       question_id: question.id,
       day_number: dayNumber,
       answer_given: answer,
@@ -123,7 +132,6 @@ export default function Home() {
       month,
     });
 
-    // Check existing leaderboard entry
     const { data: existingLb } = await supabase
       .from('leaderboard')
       .select('*')
@@ -131,7 +139,6 @@ export default function Home() {
       .eq('month', month)
       .maybeSingle();
 
-    // Look up avatar from any previous month
     let avatarId: number | null = null;
     const { data: prevEntry } = await supabase
       .from('leaderboard')
@@ -140,10 +147,8 @@ export default function Home() {
       .not('avatar_id', 'is', null)
       .limit(1)
       .maybeSingle();
-
     avatarId = prevEntry?.avatar_id ?? getRandomAvatarId();
 
-    // Calculate streak
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -161,14 +166,15 @@ export default function Home() {
           streak: newStreak,
           last_played_date: todayStr,
           name: displayName,
+          display_name: displayName,
+          kyn_username: kynUsername,
           avatar_id: existingLb.avatar_id ?? avatarId,
         })
         .eq('phone_number', phoneNumber)
         .eq('month', month);
 
       setResult({
-        isCorrect,
-        score,
+        isCorrect, score,
         totalScore: existingLb.total_score + score,
         streak: newStreak,
         correctAnswer: question.correct_answer,
@@ -177,6 +183,8 @@ export default function Home() {
       await supabase.from('leaderboard').insert({
         phone_number: phoneNumber,
         name: displayName,
+        display_name: displayName,
+        kyn_username: kynUsername,
         total_score: score,
         streak: 1,
         last_played_date: todayStr,
@@ -185,58 +193,38 @@ export default function Home() {
       });
 
       setResult({
-        isCorrect,
-        score,
+        isCorrect, score,
         totalScore: score,
         streak: 1,
         correctAnswer: question.correct_answer,
       });
     }
 
-    setAlreadyAnswered(true);
     setSubmitting(false);
-  }, [submitting, question, phoneNumber, displayName, startTime, dayNumber, month]);
+    onSubmitted?.();
+  }, [submitting, question, phoneNumber, displayName, kynUsername, startTime, dayNumber, month, onSubmitted]);
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
   }, [submitAnswer]);
 
-  if (authStatus === 'loading' || authStatus === 'checking_membership') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground font-serif">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!isIdentified) return <LoginFlow />;
-
-  if (isCommunityMember === false) return <CommunityGatePopup />;
-
-  if (!displayName) return <DisplayNamePrompt />;
-
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col items-center">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-6 pt-4">
-          <h1 className="font-serif text-3xl text-accent gold-glow">🎬 Raja Quiz</h1>
-          <p className="text-muted-foreground text-sm mt-1">Day {dayNumber} • {month}</p>
-          <OrnamentalDivider />
-        </div>
-
-        {loading ? (
-          <div className="bg-card border border-border rounded-xl p-8 text-center film-grain">
-            <p className="text-muted-foreground">Loading...</p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md bg-card border-border film-grain p-0 gap-0 overflow-hidden">
+        <div className="p-6">
+          <div className="text-center mb-3">
+            <h2 className="font-serif text-2xl text-accent gold-glow">Today's Riddle</h2>
+            <OrnamentalDivider className="my-2" />
           </div>
-        ) : result ? (
-          /* Result Card */
-          <div className="bg-card border border-border rounded-xl p-6 film-grain">
+
+          {loading ? (
+            <p className="text-center text-muted-foreground py-12 font-serif">Loading…</p>
+          ) : result ? (
             <div className="text-center">
               <div className="text-5xl mb-3">{result.isCorrect ? '🎉' : '😔'}</div>
-              <h2 className="font-serif text-2xl mb-2 text-accent">
+              <h3 className="font-serif text-2xl mb-2 text-accent">
                 {result.isCorrect ? 'Correct!' : 'Wrong!'}
-              </h2>
+              </h3>
               {!result.isCorrect && (
                 <p className="text-muted-foreground text-sm mb-3">
                   Answer: <span className="text-accent">{result.correctAnswer}</span>
@@ -257,74 +245,69 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground">Streak</p>
                 </div>
               </div>
+              <Button onClick={() => onOpenChange(false)} className="w-full mt-6 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
+                Back to Leaderboard
+              </Button>
             </div>
-            <div className="mt-6">
-              <Link to={`/leaderboard?phoneNumber=${phoneNumber}&name=${encodeURIComponent(displayName!)}`}>
-                <Button variant="outline" className="w-full">View Leaderboard</Button>
-              </Link>
+          ) : !question ? (
+            <div className="text-center py-8">
+              <h3 className="font-serif text-xl text-accent mb-2">No Question Today</h3>
+              <p className="text-muted-foreground text-sm mb-4">Check back tomorrow for the next riddle.</p>
+              <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
             </div>
-          </div>
-        ) : !question ? (
-          <div className="bg-card border border-border rounded-xl p-8 text-center film-grain">
-            <h2 className="font-serif text-xl text-accent mb-2">No Question Today</h2>
-            <p className="text-muted-foreground text-sm">Check back tomorrow for the next question!</p>
-          </div>
-        ) : (
-          /* Quiz Card */
-          <div className="bg-card border border-border rounded-xl p-6 film-grain">
-            <FilmStripTimer duration={30} onExpire={handleTimeout} isRunning={timerRunning} />
-            
-            <div className="mt-6">
-              <h2 className="font-serif text-xl text-foreground leading-relaxed mb-6">
-                {question.question_text}
-              </h2>
+          ) : (
+            <>
+              <FilmStripTimer duration={30} onExpire={handleTimeout} isRunning={timerRunning} />
+              <div className="mt-5">
+                <h3 className="font-serif text-lg text-foreground leading-relaxed mb-5">
+                  {question.question_text}
+                </h3>
 
-              {question.question_type === 'mcq' ? (
-                <div className="space-y-3">
-                  {['A', 'B', 'C', 'D'].map(opt => {
-                    const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
-                    if (!text) return null;
-                    return (
-                      <button
-                        key={opt}
-                        onClick={() => { setSelectedAnswer(opt); submitAnswer(opt); }}
-                        disabled={submitting}
-                        className={`w-full text-left p-4 rounded-lg border transition-all
-                          ${selectedAnswer === opt
-                            ? 'border-accent bg-accent/10'
-                            : 'border-border hover:border-accent/50 hover:bg-secondary'
-                          }
-                          disabled:opacity-50`}
-                      >
-                        <span className="text-accent font-serif mr-3">{opt}.</span>
-                        <span className="text-foreground">{text}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Input
-                    value={textAnswer}
-                    onChange={e => setTextAnswer(e.target.value)}
-                    placeholder="Type your answer..."
-                    className="bg-background"
-                    onKeyDown={e => { if (e.key === 'Enter' && textAnswer.trim()) submitAnswer(textAnswer.trim()); }}
-                  />
-                  <Button
-                    onClick={() => submitAnswer(textAnswer.trim())}
-                    disabled={!textAnswer.trim() || submitting}
-                    className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
-                  >
-                    Submit Answer
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-      </div>
-    </div>
+                {question.question_type === 'mcq' ? (
+                  <div className="space-y-2.5">
+                    {(['A', 'B', 'C', 'D'] as const).map(opt => {
+                      const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
+                      if (!text) return null;
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => { setSelectedAnswer(opt); submitAnswer(opt); }}
+                          disabled={submitting}
+                          className={`w-full text-left p-3.5 rounded-lg border transition-all ${
+                            selectedAnswer === opt
+                              ? 'border-accent bg-accent/10'
+                              : 'border-border hover:border-accent/50 hover:bg-secondary'
+                          } disabled:opacity-50`}
+                        >
+                          <span className="text-accent font-serif mr-3">{opt}.</span>
+                          <span className="text-foreground">{text}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Input
+                      value={textAnswer}
+                      onChange={e => setTextAnswer(e.target.value)}
+                      placeholder="Type your answer…"
+                      className="bg-background"
+                      onKeyDown={e => { if (e.key === 'Enter' && textAnswer.trim()) submitAnswer(textAnswer.trim()); }}
+                    />
+                    <Button
+                      onClick={() => submitAnswer(textAnswer.trim())}
+                      disabled={!textAnswer.trim() || submitting}
+                      className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
+                    >
+                      Submit Answer
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -17,30 +17,39 @@ export type Database = {
       leaderboard: {
         Row: {
           avatar_id: number | null
+          display_name: string | null
+          kyn_username: string | null
           last_played_date: string | null
           month: string
           name: string
           phone_number: string
+          profile_image_url: string | null
           streak: number
           total_score: number
           updated_at: string
         }
         Insert: {
           avatar_id?: number | null
+          display_name?: string | null
+          kyn_username?: string | null
           last_played_date?: string | null
           month?: string
           name: string
           phone_number: string
+          profile_image_url?: string | null
           streak?: number
           total_score?: number
           updated_at?: string
         }
         Update: {
           avatar_id?: number | null
+          display_name?: string | null
+          kyn_username?: string | null
           last_played_date?: string | null
           month?: string
           name?: string
           phone_number?: string
+          profile_image_url?: string | null
           streak?: number
           total_score?: number
           updated_at?: string
@@ -93,8 +102,10 @@ export type Database = {
         Row: {
           answer_given: string | null
           day_number: number
+          display_name: string | null
           id: string
           is_correct: boolean
+          kyn_username: string | null
           month: string
           name: string
           phone_number: string
@@ -105,8 +116,10 @@ export type Database = {
         Insert: {
           answer_given?: string | null
           day_number: number
+          display_name?: string | null
           id?: string
           is_correct?: boolean
+          kyn_username?: string | null
           month: string
           name: string
           phone_number: string
@@ -117,8 +130,10 @@ export type Database = {
         Update: {
           answer_given?: string | null
           day_number?: number
+          display_name?: string | null
           id?: string
           is_correct?: boolean
+          kyn_username?: string | null
           month?: string
           name?: string
           phone_number?: string

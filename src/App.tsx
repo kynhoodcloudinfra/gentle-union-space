@@ -1,12 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/contexts/UserContext";
 import Index from "./pages/Index";
-import Home from "./pages/Home";
-import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -21,8 +19,9 @@ const App = () => (
         <UserProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
+            {/* Backward-compat for old Kyn deep links */}
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="/leaderboard" element={<Navigate to="/" replace />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
