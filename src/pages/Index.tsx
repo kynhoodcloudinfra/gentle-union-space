@@ -61,12 +61,21 @@ export default function Index() {
 
   async function checkPlayedToday() {
     if (!phoneNumber) return;
+    // Find the currently active question (if any), then see if user submitted for it
+    const { data: liveQ } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('is_active', true)
+      .maybeSingle();
+    if (!liveQ) {
+      setPlayedToday(false);
+      return;
+    }
     const { data } = await supabase
       .from('submissions')
       .select('id')
       .eq('phone_number', phoneNumber)
-      .eq('day_number', dayNumber)
-      .eq('month', month)
+      .eq('question_id', liveQ.id)
       .maybeSingle();
     setPlayedToday(!!data);
   }
