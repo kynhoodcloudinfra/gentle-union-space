@@ -226,7 +226,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (user) {
       setProfileLoaded(false);
-      await loadProfile(user.phone);
+      await loadProfile(user.phone, user.kynUsername);
     }
   }, [user, loadProfile]);
 
@@ -236,6 +236,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setDisplayNameState(null);
     setProfileImageUrlState(null);
     setAvatarIdState(null);
+    setKynUsernameState(null);
     setProfileLoaded(false);
     setIsCommunityMember(null);
     const newParams = new URLSearchParams();
@@ -249,11 +250,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     <UserContext.Provider value={{
       phoneNumber: user?.phone ?? null,
       name: user?.name ?? null,
-      kynUsername: user?.kynUsername ?? null,
+      kynUsername: kynUsername ?? user?.kynUsername ?? null,
       displayName,
       profileImageUrl,
       avatarId,
       setDisplayName,
+      setKynUsername,
       setProfileImage,
       setAvatarId,
       isIdentified,
