@@ -73,6 +73,7 @@ export type Database = {
           option_d: string | null
           question_text: string
           question_type: string
+          scheduled_for: string | null
         }
         Insert: {
           activated_at?: string | null
@@ -90,6 +91,7 @@ export type Database = {
           option_d?: string | null
           question_text: string
           question_type?: string
+          scheduled_for?: string | null
         }
         Update: {
           activated_at?: string | null
@@ -107,6 +109,7 @@ export type Database = {
           option_d?: string | null
           question_text?: string
           question_type?: string
+          scheduled_for?: string | null
         }
         Relationships: []
       }

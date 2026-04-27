@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { supabase } from '@/lib/supabase';
-import { Eye, BarChart3, Trash2, Plus, Lock } from 'lucide-react';
+import { Eye, BarChart3, Trash2, Plus, Lock, Play, Pause, Clock } from 'lucide-react';
 import { BulkUpload } from './BulkUpload';
 import { QuestionPreviewModal, type QuestionRecord } from './QuestionPreviewModal';
 import { ResponsesModal } from './ResponsesModal';
@@ -30,6 +30,8 @@ export function QuestionsTab() {
   const [previewQ, setPreviewQ] = useState<QuestionRecord | null>(null);
   const [responsesQ, setResponsesQ] = useState<QuestionRecord | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [scheduleQ, setScheduleQ] = useState<QuestionRecord | null>(null);
+  const [scheduleValue, setScheduleValue] = useState('');
 
   async function loadQuestions() {
     const { data: qs } = await supabase
@@ -82,6 +84,86 @@ export function QuestionsTab() {
     }
     if (!confirm('Delete this question?')) return;
     await supabase.from('questions').delete().eq('id', q.id);
+    loadQuestions();
+  }
+
+  async function activateQuestion(q: QuestionRecord) {
+    // Deactivate any currently live question first
+    const { data: liveQs } = await supabase.from('questions').select('id').eq('is_active', true);
+    if (liveQs && liveQs.length > 0) {
+      if (!confirm('A question is currently live. Deactivate it and make this one live now?')) return;
+      await supabase.from('questions').update({ is_active: false }).in('id', liveQs.map(r => r.id));
+    } else {
+      if (!confirm('Make this question live now? It will run for 24 hours.')) return;
+    }
+    const now = new Date();
+    const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const { data: maxRow } = await supabase
+      .from('questions')
+      .select('day_number')
+      .order('day_number', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    const nextDay = (maxRow?.day_number ?? 0) + 1;
+    const { error } = await supabase.from('questions').update({
+      is_active: true,
+      has_been_live: true,
+      activated_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+      scheduled_for: null,
+      day_number: q.day_number ?? nextDay,
+      month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    }).eq('id', q.id);
+    if (error) {
+      toast({ title: 'Activation failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Question is now live' });
+    loadQuestions();
+  }
+
+  async function deactivateQuestion(q: QuestionRecord) {
+    if (!confirm('Deactivate this question? It will be marked expired.')) return;
+    const { error } = await supabase.from('questions').update({
+      is_active: false,
+      expires_at: new Date().toISOString(),
+    }).eq('id', q.id);
+    if (error) {
+      toast({ title: 'Deactivation failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Question deactivated' });
+    loadQuestions();
+  }
+
+  function openSchedule(q: QuestionRecord) {
+    setScheduleQ(q);
+    // Pre-fill with existing scheduled_for or now+1h, formatted for datetime-local
+    const seed = q.scheduled_for ? new Date(q.scheduled_for) : new Date(Date.now() + 60 * 60 * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setScheduleValue(
+      `${seed.getFullYear()}-${pad(seed.getMonth() + 1)}-${pad(seed.getDate())}T${pad(seed.getHours())}:${pad(seed.getMinutes())}`
+    );
+  }
+
+  async function saveSchedule() {
+    if (!scheduleQ) return;
+    const iso = scheduleValue ? new Date(scheduleValue).toISOString() : null;
+    const { error } = await supabase.from('questions').update({ scheduled_for: iso }).eq('id', scheduleQ.id);
+    if (error) {
+      toast({ title: 'Schedule failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: iso ? 'Question scheduled' : 'Schedule cleared' });
+    setScheduleQ(null);
+    loadQuestions();
+  }
+
+  async function clearSchedule() {
+    if (!scheduleQ) return;
+    await supabase.from('questions').update({ scheduled_for: null }).eq('id', scheduleQ.id);
+    toast({ title: 'Schedule cleared' });
+    setScheduleQ(null);
     loadQuestions();
   }
 
@@ -157,24 +239,30 @@ export function QuestionsTab() {
       {/* Sections */}
       <Section
         title="Live Now"
-        helper="The currently active question (auto-expires after 24h)."
+        helper="The currently active question. Auto-expires after 24h, or deactivate manually."
         bucket="live"
         questions={live}
         counts={submissionCounts}
         onPreview={setPreviewQ}
         onDelete={deleteQuestion}
         onResponses={setResponsesQ}
+        onActivate={activateQuestion}
+        onDeactivate={deactivateQuestion}
+        onSchedule={openSchedule}
       />
 
       <Section
         title="Upcoming Pool"
-        helper="Waiting to be selected. You can edit or delete these."
+        helper="Waiting to go live. Activate now, schedule a time, or let auto-rotation pick."
         bucket="upcoming"
         questions={upcoming}
         counts={submissionCounts}
         onPreview={setPreviewQ}
         onDelete={deleteQuestion}
         onResponses={setResponsesQ}
+        onActivate={activateQuestion}
+        onDeactivate={deactivateQuestion}
+        onSchedule={openSchedule}
       />
 
       <Section
@@ -186,6 +274,9 @@ export function QuestionsTab() {
         onPreview={setPreviewQ}
         onDelete={deleteQuestion}
         onResponses={setResponsesQ}
+        onActivate={activateQuestion}
+        onDeactivate={deactivateQuestion}
+        onSchedule={openSchedule}
       />
 
       <QuestionPreviewModal
@@ -200,6 +291,40 @@ export function QuestionsTab() {
         open={!!responsesQ}
         onOpenChange={open => !open && setResponsesQ(null)}
       />
+
+      {/* Schedule dialog */}
+      {scheduleQ && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setScheduleQ(null)}>
+          <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm film-grain" onClick={e => e.stopPropagation()}>
+            <h3 className="font-serif text-lg text-accent text-center">Schedule Question</h3>
+            <OrnamentalDivider className="my-2" />
+            <p className="text-xs text-muted-foreground mb-3 truncate">{scheduleQ.question_text}</p>
+            <label className="text-xs text-muted-foreground">Go live at</label>
+            <Input
+              type="datetime-local"
+              value={scheduleValue}
+              onChange={e => setScheduleValue(e.target.value)}
+              className="bg-background mt-1"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              Auto-rotation will pick this question once the time arrives (and the current live one ends).
+            </p>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={saveSchedule} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
+                Save
+              </Button>
+              {scheduleQ.scheduled_for && (
+                <Button onClick={clearSchedule} variant="outline" className="flex-1">
+                  Clear
+                </Button>
+              )}
+              <Button onClick={() => setScheduleQ(null)} variant="ghost" className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

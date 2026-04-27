@@ -10,7 +10,7 @@ import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
-import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, LogOut } from 'lucide-react';
+import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info } from 'lucide-react';
 
 interface LeaderboardEntry {
   phone_number: string;
@@ -24,7 +24,7 @@ interface LeaderboardEntry {
 }
 
 export default function Index() {
-  const { phoneNumber, isIdentified, authStatus, isCommunityMember, isFirstTime, logout } = useUser();
+  const { phoneNumber, isIdentified, authStatus, isCommunityMember, isFirstTime } = useUser();
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -141,20 +141,10 @@ export default function Index() {
                 <p className="text-sm font-serif text-foreground leading-tight truncate max-w-[120px]">
                   {me?.display_name ?? 'Maestro'}
                 </p>
-                <p className="text-[10px] text-destructive/80 leading-tight flex items-center gap-1 mt-0.5">
-                  <LogOut size={10} /> Logout in profile
-                </p>
               </div>
             </button>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={logout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-serif transition-colors"
-                aria-label="Log out"
-              >
-                <LogOut size={13} /> Logout
-              </button>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border">
                 <Flame size={14} className="text-orange-400" />
                 <span className="text-sm font-serif text-foreground">{me?.streak ?? 0}</span>

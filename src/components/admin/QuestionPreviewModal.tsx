@@ -23,6 +23,7 @@ export interface QuestionRecord {
   has_been_live?: boolean;
   activated_at?: string | null;
   expires_at?: string | null;
+  scheduled_for?: string | null;
 }
 
 interface Props {
