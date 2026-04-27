@@ -24,6 +24,7 @@ export interface QuestionRecord {
   activated_at?: string | null;
   expires_at?: string | null;
   scheduled_for?: string | null;
+  created_at?: string | null;
 }
 
 interface Props {
