@@ -66,6 +66,11 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
     setUploading(false);
   }
 
+  function handleLogout() {
+    onOpenChange(false);
+    logout();
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md bg-card border-border film-grain overflow-y-auto">
@@ -79,6 +84,14 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
           {kynUsername && (
             <p className="text-xs text-muted-foreground tracking-wide">@{kynUsername}</p>
           )}
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="sm"
+            className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-serif"
+          >
+            <LogOut size={14} className="mr-2" /> Log out
+          </Button>
         </div>
 
         <OrnamentalDivider className="my-5" />
@@ -206,10 +219,7 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
         </div>
 
         <Button
-          onClick={() => {
-            onOpenChange(false);
-            logout();
-          }}
+          onClick={handleLogout}
           variant="outline"
           className="w-full mt-6 mb-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-serif"
         >
