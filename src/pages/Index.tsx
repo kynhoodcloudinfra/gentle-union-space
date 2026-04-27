@@ -141,20 +141,10 @@ export default function Index() {
                 <p className="text-sm font-serif text-foreground leading-tight truncate max-w-[120px]">
                   {me?.display_name ?? 'Maestro'}
                 </p>
-                <p className="text-[10px] text-destructive/80 leading-tight flex items-center gap-1 mt-0.5">
-                  <LogOut size={10} /> Logout in profile
-                </p>
               </div>
             </button>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={logout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-serif transition-colors"
-                aria-label="Log out"
-              >
-                <LogOut size={13} /> Logout
-              </button>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border">
                 <Flame size={14} className="text-orange-400" />
                 <span className="text-sm font-serif text-foreground">{me?.streak ?? 0}</span>
