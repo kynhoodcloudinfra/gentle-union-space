@@ -81,9 +81,9 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-card border-border film-grain max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`max-w-lg bg-card border-border film-grain max-h-[90vh] overflow-y-auto ${isLocked && !editing ? 'sm:max-w-xl' : ''}`}>
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl text-accent gold-glow text-center">
+          <DialogTitle className={`font-serif text-2xl text-accent gold-glow ${isLocked && !editing ? 'text-center' : 'text-center'}`}>
             {editing ? 'Edit Question' : 'Question Preview'}
           </DialogTitle>
         </DialogHeader>
@@ -91,14 +91,14 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
         <OrnamentalDivider className="my-2" />
 
         {isLocked && !editing && (
-          <div className="flex items-center gap-2 p-2.5 rounded-md bg-secondary/40 border border-border/50 mb-2 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 p-2.5 rounded-md bg-secondary/40 border border-border/50 mb-2 text-xs text-muted-foreground text-center">
             <Lock size={12} className="text-accent" />
-            This question has gone live — it can no longer be edited or deleted. View only.
+            <span>This question has gone live — view only.</span>
           </div>
         )}
 
-        <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className={`space-y-3 ${isLocked && !editing ? 'text-center' : ''}`}>
+          <div className={`grid grid-cols-3 gap-2 text-xs ${isLocked && !editing ? 'max-w-sm mx-auto' : ''}`}>
             <div>
               <label className="text-muted-foreground">Status</label>
               <p className={`font-serif ${form.is_active ? 'text-destructive' : form.has_been_live ? 'text-muted-foreground' : 'text-accent'}`}>
@@ -131,12 +131,14 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
                 className="bg-background min-h-[80px]"
               />
             ) : (
-              <p className="font-serif text-foreground p-3 bg-background/50 rounded-md mt-1">{form.question_text}</p>
+              <p className={`font-serif text-foreground p-3 bg-background/50 rounded-md mt-1 ${isLocked ? 'text-center text-base' : ''}`}>
+                {form.question_text}
+              </p>
             )}
           </div>
 
           {isMcq && (
-            <div className="space-y-2">
+            <div className={`space-y-2 ${isLocked && !editing ? 'max-w-md mx-auto text-left' : ''}`}>
               {(['a', 'b', 'c', 'd'] as const).map(opt => {
                 const key = `option_${opt}` as keyof QuestionRecord;
                 const value = form[key] as string | null;
@@ -163,7 +165,7 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
             </div>
           )}
 
-          <div>
+          <div className={isLocked && !editing ? 'max-w-md mx-auto' : ''}>
             <label className="text-xs text-muted-foreground">Correct Answer</label>
             {editing ? (
               <Input
