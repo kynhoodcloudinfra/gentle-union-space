@@ -206,9 +206,12 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
         </div>
 
         <Button
-          onClick={logout}
+          onClick={() => {
+            onOpenChange(false);
+            logout();
+          }}
           variant="outline"
-          className="w-full mt-6 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-serif"
+          className="w-full mt-6 mb-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-serif"
         >
           <LogOut size={16} className="mr-2" /> Log out
         </Button>
