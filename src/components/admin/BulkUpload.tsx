@@ -87,7 +87,7 @@ export function BulkUpload({ onSaved }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground mb-2">
-        Questions go into a pool. The system picks a random one each day automatically — no need to assign dates.
+        Add an optional <span className="text-accent">scheduled_for</span> column (e.g. <code>2026-05-01 09:00</code>) to set a publish date. Leave blank for auto-rotation.
       </p>
 
       <input
