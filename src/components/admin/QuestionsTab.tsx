@@ -230,6 +230,17 @@ export function QuestionsTab() {
               />
             </div>
 
+            <div>
+              <label className="text-xs text-muted-foreground">Scheduled Publish Date <span className="text-muted-foreground/60">(optional)</span></label>
+              <Input
+                type="datetime-local"
+                value={form.scheduled_for}
+                onChange={e => setForm({ ...form, scheduled_for: e.target.value })}
+                className="bg-background"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Leave blank for auto-rotation. Creation date is captured automatically.</p>
+            </div>
+
             <Button onClick={addQuestion} disabled={loading || !form.question_text || !form.correct_answer} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
               {loading ? 'Adding…' : 'Add to Pool'}
             </Button>
