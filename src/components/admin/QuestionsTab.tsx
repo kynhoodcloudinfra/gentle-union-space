@@ -18,6 +18,7 @@ const blankForm = {
   option_d: '',
   correct_answer: '',
   question_type: 'mcq' as 'mcq' | 'text',
+  scheduled_for: '',
 };
 
 type Bucket = 'live' | 'upcoming' | 'expired';
@@ -58,9 +59,12 @@ export function QuestionsTab() {
 
   async function addQuestion() {
     setLoading(true);
+    const { scheduled_for, ...rest } = form;
+    const scheduledIso = scheduled_for ? new Date(scheduled_for).toISOString() : null;
+    const base = { ...rest, is_active: false, has_been_live: false, scheduled_for: scheduledIso };
     const payload = form.question_type === 'text'
-      ? { ...form, option_a: null, option_b: null, option_c: null, option_d: null, is_active: false, has_been_live: false }
-      : { ...form, is_active: false, has_been_live: false };
+      ? { ...base, option_a: null, option_b: null, option_c: null, option_d: null }
+      : base;
     const { error } = await supabase.from('questions').insert(payload as any);
     setLoading(false);
     if (error) {
@@ -224,6 +228,17 @@ export function QuestionsTab() {
                 className="bg-background"
                 placeholder={form.question_type === 'mcq' ? 'A / B / C / D' : 'The correct text answer'}
               />
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground">Scheduled Publish Date <span className="text-muted-foreground/60">(optional)</span></label>
+              <Input
+                type="datetime-local"
+                value={form.scheduled_for}
+                onChange={e => setForm({ ...form, scheduled_for: e.target.value })}
+                className="bg-background"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Leave blank for auto-rotation. Creation date is captured automatically.</p>
             </div>
 
             <Button onClick={addQuestion} disabled={loading || !form.question_text || !form.correct_answer} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
