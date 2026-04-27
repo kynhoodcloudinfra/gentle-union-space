@@ -18,6 +18,7 @@ const blankForm = {
   option_d: '',
   correct_answer: '',
   question_type: 'mcq' as 'mcq' | 'text',
+  scheduled_for: '',
 };
 
 type Bucket = 'live' | 'upcoming' | 'expired';
