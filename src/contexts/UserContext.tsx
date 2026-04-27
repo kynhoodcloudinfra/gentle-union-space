@@ -260,6 +260,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [user, loadProfile]);
 
   const logout = useCallback(() => {
+    try { localStorage.removeItem(PROXY_SESSION_KEY); } catch { /* ignore */ }
     setUser(null);
     setAuthStatus('unauthenticated');
     setDisplayNameState(null);
@@ -293,6 +294,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       isFirstTime,
       logout,
       refreshProfile,
+      proxyLogin,
     }}>
       {children}
     </UserContext.Provider>
