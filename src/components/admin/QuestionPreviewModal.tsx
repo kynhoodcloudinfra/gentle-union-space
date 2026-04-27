@@ -81,7 +81,7 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`max-w-lg bg-card border-border film-grain max-h-[90vh] overflow-y-auto ${isLocked && !editing ? 'sm:max-w-xl' : ''}`}>
+      <DialogContent className={`max-w-[calc(100vw-2rem)] sm:max-w-lg bg-card border-border film-grain max-h-[calc(100dvh-2rem)] overflow-y-auto ${isLocked && !editing ? 'sm:max-w-xl' : ''}`}>
         <DialogHeader>
           <DialogTitle className={`font-serif text-2xl text-accent gold-glow ${isLocked && !editing ? 'text-center' : 'text-center'}`}>
             {editing ? 'Edit Question' : 'Question Preview'}
