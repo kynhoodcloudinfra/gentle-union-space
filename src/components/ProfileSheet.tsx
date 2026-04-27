@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OrnamentalDivider } from './OrnamentalDivider';
 import { avatarMap } from '@/lib/avatars';
-import { LogOut, Upload, Image as ImageIcon, Check } from 'lucide-react';
+import { LogOut, Upload, Image as ImageIcon, Check, Pencil, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ProfileSheetProps {
