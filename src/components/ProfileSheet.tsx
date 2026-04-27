@@ -35,7 +35,7 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
     const res = await setKynUsername(usernameDraft);
     setSavingUsername(false);
     if (!res.ok) {
-      setUsernameError(res.error);
+      setUsernameError((res as { ok: false; error: string }).error);
       return;
     }
     toast({ title: 'Username updated' });
