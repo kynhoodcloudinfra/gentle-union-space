@@ -8,11 +8,12 @@ type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated' | 'checking_me
 interface UserContextType {
   phoneNumber: string | null;
   name: string | null;            // Kyn full name
-  kynUsername: string | null;     // Kyn @username
+  kynUsername: string | null;     // Kyn @username (editable, unique)
   displayName: string | null;     // What they chose to show on the leaderboard
   profileImageUrl: string | null; // Custom uploaded image (overrides avatar_id)
   avatarId: number | null;
   setDisplayName: (name: string) => Promise<void>;
+  setKynUsername: (username: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   setProfileImage: (url: string | null) => Promise<void>;
   setAvatarId: (id: number) => Promise<void>;
   isIdentified: boolean;
