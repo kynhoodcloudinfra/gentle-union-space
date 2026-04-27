@@ -239,24 +239,30 @@ export function QuestionsTab() {
       {/* Sections */}
       <Section
         title="Live Now"
-        helper="The currently active question (auto-expires after 24h)."
+        helper="The currently active question. Auto-expires after 24h, or deactivate manually."
         bucket="live"
         questions={live}
         counts={submissionCounts}
         onPreview={setPreviewQ}
         onDelete={deleteQuestion}
         onResponses={setResponsesQ}
+        onActivate={activateQuestion}
+        onDeactivate={deactivateQuestion}
+        onSchedule={openSchedule}
       />
 
       <Section
         title="Upcoming Pool"
-        helper="Waiting to be selected. You can edit or delete these."
+        helper="Waiting to go live. Activate now, schedule a time, or let auto-rotation pick."
         bucket="upcoming"
         questions={upcoming}
         counts={submissionCounts}
         onPreview={setPreviewQ}
         onDelete={deleteQuestion}
         onResponses={setResponsesQ}
+        onActivate={activateQuestion}
+        onDeactivate={deactivateQuestion}
+        onSchedule={openSchedule}
       />
 
       <Section
@@ -268,6 +274,9 @@ export function QuestionsTab() {
         onPreview={setPreviewQ}
         onDelete={deleteQuestion}
         onResponses={setResponsesQ}
+        onActivate={activateQuestion}
+        onDeactivate={deactivateQuestion}
+        onSchedule={openSchedule}
       />
 
       <QuestionPreviewModal
@@ -282,6 +291,40 @@ export function QuestionsTab() {
         open={!!responsesQ}
         onOpenChange={open => !open && setResponsesQ(null)}
       />
+
+      {/* Schedule dialog */}
+      {scheduleQ && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setScheduleQ(null)}>
+          <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm film-grain" onClick={e => e.stopPropagation()}>
+            <h3 className="font-serif text-lg text-accent text-center">Schedule Question</h3>
+            <OrnamentalDivider className="my-2" />
+            <p className="text-xs text-muted-foreground mb-3 truncate">{scheduleQ.question_text}</p>
+            <label className="text-xs text-muted-foreground">Go live at</label>
+            <Input
+              type="datetime-local"
+              value={scheduleValue}
+              onChange={e => setScheduleValue(e.target.value)}
+              className="bg-background mt-1"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              Auto-rotation will pick this question once the time arrives (and the current live one ends).
+            </p>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={saveSchedule} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
+                Save
+              </Button>
+              {scheduleQ.scheduled_for && (
+                <Button onClick={clearSchedule} variant="outline" className="flex-1">
+                  Clear
+                </Button>
+              )}
+              <Button onClick={() => setScheduleQ(null)} variant="ghost" className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
