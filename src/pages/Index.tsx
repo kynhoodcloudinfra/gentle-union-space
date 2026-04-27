@@ -24,7 +24,10 @@ interface LeaderboardEntry {
 }
 
 export default function Index() {
-  const { phoneNumber, isIdentified, authStatus, isCommunityMember, isFirstTime } = useUser();
+  const {
+    phoneNumber, isIdentified, authStatus, isCommunityMember, isFirstTime,
+    displayName: ctxDisplayName, avatarId: ctxAvatarId, profileImageUrl: ctxProfileImage,
+  } = useUser();
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -88,10 +91,35 @@ export default function Index() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIdentified, isFirstTime, phoneNumber]);
 
+  // Realtime: refresh leaderboard + playedToday when questions or leaderboard change
+  useEffect(() => {
+    if (!isIdentified || isFirstTime) return;
+    const channel = supabase
+      .channel('homepage-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leaderboard' }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, () => {
+        checkPlayedToday();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, (payload) => {
+        const row = (payload.new ?? payload.old) as { phone_number?: string } | null;
+        if (row?.phone_number === phoneNumber) checkPlayedToday();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIdentified, isFirstTime, phoneNumber]);
+
   const me = useMemo(
     () => data.find(e => e.phone_number === phoneNumber),
     [data, phoneNumber]
   );
+
+  // Header reflects live context values immediately (display name + avatar updates)
+  const meDisplayName = ctxDisplayName ?? me?.display_name ?? 'Maestro';
+  const meAvatarId = ctxAvatarId ?? me?.avatar_id ?? null;
+  const meProfileImage = ctxProfileImage ?? me?.profile_image_url ?? null;
 
   const myRank = useMemo(
     () => phoneNumber ? data.findIndex(e => e.phone_number === phoneNumber) + 1 : 0,
@@ -131,15 +159,15 @@ export default function Index() {
               aria-label="Open profile"
             >
               <AvatarDisplay
-                avatarId={me?.avatar_id ?? null}
-                imageUrl={me?.profile_image_url ?? null}
+                avatarId={meAvatarId}
+                imageUrl={meProfileImage}
                 size={42}
                 className="ring-2 ring-accent/30 group-hover:ring-accent/60 transition-all"
               />
               <div className="text-left">
                 <p className="text-xs text-muted-foreground leading-none">Hello,</p>
                 <p className="text-sm font-serif text-foreground leading-tight truncate max-w-[120px]">
-                  {me?.display_name ?? 'Maestro'}
+                  {meDisplayName}
                 </p>
               </div>
             </button>
