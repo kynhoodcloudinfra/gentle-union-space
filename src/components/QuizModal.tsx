@@ -123,7 +123,10 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     const dayNumber = question.day_number;
 
     const timeTaken = (Date.now() - startTime) / 1000;
-    const isCorrect = answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim();
+    // MCQ: case-insensitive (just A/B/C/D). Text: strict — case + space sensitive.
+    const isCorrect = question.question_type === 'mcq'
+      ? answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
+      : answer === question.correct_answer;
     const score = isCorrect ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 125 : 100) : 0;
 
     await supabase.from('submissions').insert({
