@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useUser } from '@/contexts/UserContext';
-import { LoginFlow } from '@/components/LoginFlow';
+
 import { CommunityGatePopup } from '@/components/CommunityGatePopup';
 import { DisplayNamePrompt } from '@/components/DisplayNamePrompt';
 import { ProfileSheet } from '@/components/ProfileSheet';
@@ -134,7 +134,6 @@ export default function Index() {
     );
   }
 
-  if (!isIdentified) return <LoginFlow />;
   if (isCommunityMember === false) return <CommunityGatePopup />;
 
   const visible = showAll ? data : data.slice(0, 10);
