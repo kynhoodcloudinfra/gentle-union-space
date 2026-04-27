@@ -10,7 +10,7 @@ import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
-import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, LogOut } from 'lucide-react';
+import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info } from 'lucide-react';
 
 interface LeaderboardEntry {
   phone_number: string;
