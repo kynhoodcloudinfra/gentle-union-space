@@ -152,7 +152,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const setDisplayName = useCallback(async (newName: string) => {
     setDisplayNameState(newName);
     if (!user) return;
-    // Upsert: ensure at least one row exists so the name persists pre-quiz
     const { data: existing } = await supabase
       .from('leaderboard')
       .select('phone_number')
@@ -160,19 +159,58 @@ export function UserProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .maybeSingle();
 
+    const handle = kynUsername ?? user.kynUsername;
     if (existing) {
-      await persistProfileField({ display_name: newName, name: newName, kyn_username: user.kynUsername });
+      await persistProfileField({ display_name: newName, name: newName, kyn_username: handle });
     } else {
       await supabase.from('leaderboard').insert({
         phone_number: user.phone,
         name: newName,
         display_name: newName,
-        kyn_username: user.kynUsername,
+        kyn_username: handle,
         total_score: 0,
         streak: 0,
       });
     }
-  }, [user, persistProfileField]);
+  }, [user, persistProfileField, kynUsername]);
+
+  const setKynUsername = useCallback(async (raw: string): Promise<{ ok: true } | { ok: false; error: string }> => {
+    if (!user) return { ok: false, error: 'Not signed in' };
+    const username = raw.trim().toLowerCase().replace(/^@+/, '');
+    if (!/^[a-z0-9_.]{3,20}$/.test(username)) {
+      return { ok: false, error: 'Use 3–20 chars: letters, numbers, _ or .' };
+    }
+    // Uniqueness — case-insensitive — must not match any other user's username
+    const { data: clashes, error: lookupErr } = await supabase
+      .from('leaderboard')
+      .select('phone_number, kyn_username')
+      .ilike('kyn_username', username);
+    if (lookupErr) return { ok: false, error: lookupErr.message };
+    const taken = (clashes ?? []).some(r => r.phone_number !== user.phone);
+    if (taken) return { ok: false, error: 'This username is already taken' };
+
+    setKynUsernameState(username);
+    // Persist (insert row if user has none yet)
+    const { data: existing } = await supabase
+      .from('leaderboard')
+      .select('phone_number')
+      .eq('phone_number', user.phone)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      await persistProfileField({ kyn_username: username });
+    } else {
+      await supabase.from('leaderboard').insert({
+        phone_number: user.phone,
+        name: displayName ?? user.name,
+        display_name: displayName ?? user.name,
+        kyn_username: username,
+        total_score: 0,
+        streak: 0,
+      });
+    }
+    return { ok: true };
+  }, [user, persistProfileField, displayName]);
 
   const setProfileImage = useCallback(async (url: string | null) => {
     setProfileImageUrlState(url);
