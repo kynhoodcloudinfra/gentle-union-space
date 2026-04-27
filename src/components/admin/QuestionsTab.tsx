@@ -30,6 +30,8 @@ export function QuestionsTab() {
   const [previewQ, setPreviewQ] = useState<QuestionRecord | null>(null);
   const [responsesQ, setResponsesQ] = useState<QuestionRecord | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [scheduleQ, setScheduleQ] = useState<QuestionRecord | null>(null);
+  const [scheduleValue, setScheduleValue] = useState('');
 
   async function loadQuestions() {
     const { data: qs } = await supabase
