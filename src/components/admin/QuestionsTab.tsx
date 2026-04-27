@@ -87,6 +87,86 @@ export function QuestionsTab() {
     loadQuestions();
   }
 
+  async function activateQuestion(q: QuestionRecord) {
+    // Deactivate any currently live question first
+    const { data: liveQs } = await supabase.from('questions').select('id').eq('is_active', true);
+    if (liveQs && liveQs.length > 0) {
+      if (!confirm('A question is currently live. Deactivate it and make this one live now?')) return;
+      await supabase.from('questions').update({ is_active: false }).in('id', liveQs.map(r => r.id));
+    } else {
+      if (!confirm('Make this question live now? It will run for 24 hours.')) return;
+    }
+    const now = new Date();
+    const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const { data: maxRow } = await supabase
+      .from('questions')
+      .select('day_number')
+      .order('day_number', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    const nextDay = (maxRow?.day_number ?? 0) + 1;
+    const { error } = await supabase.from('questions').update({
+      is_active: true,
+      has_been_live: true,
+      activated_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+      scheduled_for: null,
+      day_number: q.day_number ?? nextDay,
+      month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    }).eq('id', q.id);
+    if (error) {
+      toast({ title: 'Activation failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Question is now live' });
+    loadQuestions();
+  }
+
+  async function deactivateQuestion(q: QuestionRecord) {
+    if (!confirm('Deactivate this question? It will be marked expired.')) return;
+    const { error } = await supabase.from('questions').update({
+      is_active: false,
+      expires_at: new Date().toISOString(),
+    }).eq('id', q.id);
+    if (error) {
+      toast({ title: 'Deactivation failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Question deactivated' });
+    loadQuestions();
+  }
+
+  function openSchedule(q: QuestionRecord) {
+    setScheduleQ(q);
+    // Pre-fill with existing scheduled_for or now+1h, formatted for datetime-local
+    const seed = q.scheduled_for ? new Date(q.scheduled_for) : new Date(Date.now() + 60 * 60 * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setScheduleValue(
+      `${seed.getFullYear()}-${pad(seed.getMonth() + 1)}-${pad(seed.getDate())}T${pad(seed.getHours())}:${pad(seed.getMinutes())}`
+    );
+  }
+
+  async function saveSchedule() {
+    if (!scheduleQ) return;
+    const iso = scheduleValue ? new Date(scheduleValue).toISOString() : null;
+    const { error } = await supabase.from('questions').update({ scheduled_for: iso }).eq('id', scheduleQ.id);
+    if (error) {
+      toast({ title: 'Schedule failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: iso ? 'Question scheduled' : 'Schedule cleared' });
+    setScheduleQ(null);
+    loadQuestions();
+  }
+
+  async function clearSchedule() {
+    if (!scheduleQ) return;
+    await supabase.from('questions').update({ scheduled_for: null }).eq('id', scheduleQ.id);
+    toast({ title: 'Schedule cleared' });
+    setScheduleQ(null);
+    loadQuestions();
+  }
+
   // Categorise
   const live: QuestionRecord[] = [];
   const upcoming: QuestionRecord[] = [];
