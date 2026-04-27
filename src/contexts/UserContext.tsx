@@ -55,9 +55,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Mount: parse token or legacy params
-  // TEMP: Kyn login flow disabled for end-to-end testing — auto-injects a dummy user.
-  // To re-enable real auth, set BYPASS_KYN_AUTH = false.
-  const BYPASS_KYN_AUTH = true;
+  // Kyn login flow re-enabled so login + logout can be tested end-to-end.
+  const BYPASS_KYN_AUTH = false;
 
   useEffect(() => {
     if (BYPASS_KYN_AUTH) {
