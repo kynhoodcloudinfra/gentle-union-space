@@ -269,12 +269,6 @@ export default function Index() {
             <p className="text-muted-foreground/40 text-[10px] font-serif italic text-center">
               ♪ Raaja Riddle — An Ilaiyaraaja Tribute ♪
             </p>
-            <a
-              href="/admin"
-              className="text-[10px] text-muted-foreground/50 hover:text-accent tracking-[0.2em] uppercase font-serif"
-            >
-              Admin
-            </a>
           </div>
         </div>
 
