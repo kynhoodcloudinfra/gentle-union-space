@@ -159,15 +159,15 @@ export default function Index() {
               aria-label="Open profile"
             >
               <AvatarDisplay
-                avatarId={me?.avatar_id ?? null}
-                imageUrl={me?.profile_image_url ?? null}
+                avatarId={meAvatarId}
+                imageUrl={meProfileImage}
                 size={42}
                 className="ring-2 ring-accent/30 group-hover:ring-accent/60 transition-all"
               />
               <div className="text-left">
                 <p className="text-xs text-muted-foreground leading-none">Hello,</p>
                 <p className="text-sm font-serif text-foreground leading-tight truncate max-w-[120px]">
-                  {me?.display_name ?? 'Maestro'}
+                  {meDisplayName}
                 </p>
               </div>
             </button>
