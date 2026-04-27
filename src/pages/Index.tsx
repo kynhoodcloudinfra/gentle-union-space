@@ -24,7 +24,7 @@ interface LeaderboardEntry {
 }
 
 export default function Index() {
-  const { phoneNumber, isIdentified, authStatus, isCommunityMember, isFirstTime, logout } = useUser();
+  const { phoneNumber, isIdentified, authStatus, isCommunityMember, isFirstTime } = useUser();
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
