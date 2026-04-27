@@ -130,7 +130,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authStatus === 'authenticated' && user && !profileLoaded) {
-      loadProfile(user.phone);
+      loadProfile(user.phone, user.kynUsername);
     }
   }, [authStatus, user, profileLoaded, loadProfile]);
 
