@@ -67,7 +67,7 @@
 
 /* Film grain overlay utility */
 .film-grain {
-  position: relative;
+  isolation: isolate;
 }
 .film-grain::after {
   content: '';
