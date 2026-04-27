@@ -44,7 +44,7 @@ export function ResponsesModal({ questionId, questionText, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-card border-border film-grain max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-card border-border film-grain max-h-[calc(100dvh-2rem)] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl text-accent gold-glow text-center">
             Responses
@@ -76,7 +76,7 @@ export function ResponsesModal({ questionId, questionText, open, onOpenChange }:
               </div>
             </div>
 
-            <div className="overflow-auto flex-1 border border-border rounded-md">
+            <div className="overflow-auto flex-1 min-h-0 border border-border rounded-md">
               <table className="w-full text-xs">
                 <thead className="bg-secondary sticky top-0">
                   <tr className="border-b border-border">
