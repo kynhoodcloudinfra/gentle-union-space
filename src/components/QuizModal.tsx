@@ -300,13 +300,16 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     <Input
                       value={textAnswer}
                       onChange={e => setTextAnswer(e.target.value)}
-                      placeholder="Type your answer…"
+                      placeholder="Type your answer (case & spaces matter)…"
                       className="bg-background"
-                      onKeyDown={e => { if (e.key === 'Enter' && textAnswer.trim()) submitAnswer(textAnswer.trim()); }}
+                      onKeyDown={e => { if (e.key === 'Enter' && textAnswer.length > 0) submitAnswer(textAnswer); }}
                     />
+                    <p className="text-[10px] text-muted-foreground">
+                      Answers are checked exactly — capitalization and spaces must match.
+                    </p>
                     <Button
-                      onClick={() => submitAnswer(textAnswer.trim())}
-                      disabled={!textAnswer.trim() || submitting}
+                      onClick={() => submitAnswer(textAnswer)}
+                      disabled={textAnswer.length === 0 || submitting}
                       className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
                     >
                       Submit Answer
