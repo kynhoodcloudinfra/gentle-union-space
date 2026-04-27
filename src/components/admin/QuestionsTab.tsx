@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { supabase } from '@/lib/supabase';
-import { Eye, BarChart3, Trash2, Plus, Lock } from 'lucide-react';
+import { Eye, BarChart3, Trash2, Plus, Lock, Play, Pause, Clock } from 'lucide-react';
 import { BulkUpload } from './BulkUpload';
 import { QuestionPreviewModal, type QuestionRecord } from './QuestionPreviewModal';
 import { ResponsesModal } from './ResponsesModal';
