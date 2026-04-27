@@ -123,7 +123,10 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     const dayNumber = question.day_number;
 
     const timeTaken = (Date.now() - startTime) / 1000;
-    const isCorrect = answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim();
+    // MCQ: case-insensitive (just A/B/C/D). Text: strict — case + space sensitive.
+    const isCorrect = question.question_type === 'mcq'
+      ? answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
+      : answer === question.correct_answer;
     const score = isCorrect ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 125 : 100) : 0;
 
     await supabase.from('submissions').insert({
@@ -297,13 +300,16 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     <Input
                       value={textAnswer}
                       onChange={e => setTextAnswer(e.target.value)}
-                      placeholder="Type your answer…"
+                      placeholder="Type your answer (case & spaces matter)…"
                       className="bg-background"
-                      onKeyDown={e => { if (e.key === 'Enter' && textAnswer.trim()) submitAnswer(textAnswer.trim()); }}
+                      onKeyDown={e => { if (e.key === 'Enter' && textAnswer.length > 0) submitAnswer(textAnswer); }}
                     />
+                    <p className="text-[10px] text-muted-foreground">
+                      Answers are checked exactly — capitalization and spaces must match.
+                    </p>
                     <Button
-                      onClick={() => submitAnswer(textAnswer.trim())}
-                      disabled={!textAnswer.trim() || submitting}
+                      onClick={() => submitAnswer(textAnswer)}
+                      disabled={textAnswer.length === 0 || submitting}
                       className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
                     >
                       Submit Answer
