@@ -47,17 +47,25 @@ export function BulkUpload({ onSaved }: Props) {
   async function saveAll() {
     setSaving(true);
     // Insert as inactive — system will rotate them in automatically
-    const payload = parsedRows.map(r => ({
-      question_text: r.question_text,
-      option_a: r.option_a ?? null,
-      option_b: r.option_b ?? null,
-      option_c: r.option_c ?? null,
-      option_d: r.option_d ?? null,
-      correct_answer: r.correct_answer,
-      question_type: r.question_type,
-      is_active: false,
-      has_been_live: false,
-    }));
+    const payload = parsedRows.map(r => {
+      let scheduled: string | null = null;
+      if (r.scheduled_for && String(r.scheduled_for).trim()) {
+        const d = new Date(String(r.scheduled_for).trim().replace(' ', 'T'));
+        if (!isNaN(d.getTime())) scheduled = d.toISOString();
+      }
+      return {
+        question_text: r.question_text,
+        option_a: r.option_a ?? null,
+        option_b: r.option_b ?? null,
+        option_c: r.option_c ?? null,
+        option_d: r.option_d ?? null,
+        correct_answer: r.correct_answer,
+        question_type: r.question_type,
+        is_active: false,
+        has_been_live: false,
+        scheduled_for: scheduled,
+      };
+    });
     const { error } = await supabase.from('questions').insert(payload as any);
     setSaving(false);
     if (error) {
