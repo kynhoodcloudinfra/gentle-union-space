@@ -338,9 +338,12 @@ interface SectionProps {
   onPreview: (q: QuestionRecord) => void;
   onDelete: (q: QuestionRecord) => void;
   onResponses: (q: QuestionRecord) => void;
+  onActivate: (q: QuestionRecord) => void;
+  onDeactivate: (q: QuestionRecord) => void;
+  onSchedule: (q: QuestionRecord) => void;
 }
 
-function Section({ title, helper, bucket, questions, counts, onPreview, onDelete, onResponses }: SectionProps) {
+function Section({ title, helper, bucket, questions, counts, onPreview, onDelete, onResponses, onActivate, onDeactivate, onSchedule }: SectionProps) {
   return (
     <div className="bg-card border border-border rounded-xl p-5 film-grain mb-4">
       <h3 className="font-serif text-lg text-accent">{title} <span className="text-xs text-muted-foreground font-sans">({questions.length})</span></h3>
@@ -354,6 +357,7 @@ function Section({ title, helper, bucket, questions, counts, onPreview, onDelete
           {questions.map(q => {
             const responses = counts[q.id] ?? 0;
             const locked = bucket !== 'upcoming';
+            const scheduled = !!q.scheduled_for;
             return (
               <div key={q.id} className="flex items-center gap-2 p-2.5 border border-border/60 rounded-md bg-secondary/40 hover:bg-secondary transition-colors">
                 {bucket === 'live' && (
@@ -361,6 +365,11 @@ function Section({ title, helper, bucket, questions, counts, onPreview, onDelete
                 )}
                 {bucket === 'expired' && q.day_number != null && (
                   <span className="text-accent font-serif w-9 text-xs">D{q.day_number}</span>
+                )}
+                {bucket === 'upcoming' && scheduled && (
+                  <span className="text-[9px] uppercase tracking-wider text-accent border border-accent/40 px-1 py-0.5 rounded" title={`Scheduled for ${new Date(q.scheduled_for!).toLocaleString()}`}>
+                    Scheduled
+                  </span>
                 )}
                 <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{q.question_type}</span>
                 <span className="flex-1 text-xs truncate text-foreground">{q.question_text}</span>
@@ -371,6 +380,33 @@ function Section({ title, helper, bucket, questions, counts, onPreview, onDelete
                     title="View responses"
                   >
                     <BarChart3 size={14} /> {responses}
+                  </button>
+                )}
+                {bucket === 'upcoming' && (
+                  <>
+                    <button
+                      onClick={() => onActivate(q)}
+                      className="text-muted-foreground hover:text-accent p-1"
+                      title="Activate now (make live)"
+                    >
+                      <Play size={14} />
+                    </button>
+                    <button
+                      onClick={() => onSchedule(q)}
+                      className={`p-1 ${scheduled ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+                      title={scheduled ? `Scheduled: ${new Date(q.scheduled_for!).toLocaleString()}` : 'Schedule'}
+                    >
+                      <Clock size={14} />
+                    </button>
+                  </>
+                )}
+                {bucket === 'live' && (
+                  <button
+                    onClick={() => onDeactivate(q)}
+                    className="text-muted-foreground hover:text-destructive p-1"
+                    title="Deactivate"
+                  >
+                    <Pause size={14} />
                   </button>
                 )}
                 <button
