@@ -84,14 +84,6 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
           {kynUsername && (
             <p className="text-xs text-muted-foreground tracking-wide">@{kynUsername}</p>
           )}
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            size="sm"
-            className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-serif"
-          >
-            <LogOut size={14} className="mr-2" /> Log out
-          </Button>
         </div>
 
         <OrnamentalDivider className="my-5" />
