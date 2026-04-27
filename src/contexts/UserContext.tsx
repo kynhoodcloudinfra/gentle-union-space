@@ -22,7 +22,10 @@ interface UserContextType {
   isFirstTime: boolean;           // true until they've set a display name
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  proxyLogin: (u: { phone: string; name: string; kynUsername: string }) => void;
 }
+
+const PROXY_SESSION_KEY = 'raaja_proxy_session_v1';
 
 const UserContext = createContext<UserContextType>({
   phoneNumber: null,
@@ -41,6 +44,7 @@ const UserContext = createContext<UserContextType>({
   isFirstTime: false,
   logout: () => {},
   refreshProfile: async () => {},
+  proxyLogin: () => {},
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {
