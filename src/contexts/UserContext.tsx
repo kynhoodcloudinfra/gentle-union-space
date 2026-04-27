@@ -22,7 +22,10 @@ interface UserContextType {
   isFirstTime: boolean;           // true until they've set a display name
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  proxyLogin: (u: { phone: string; name: string; kynUsername: string }) => void;
 }
+
+const PROXY_SESSION_KEY = 'raaja_proxy_session_v1';
 
 const UserContext = createContext<UserContextType>({
   phoneNumber: null,
@@ -41,6 +44,7 @@ const UserContext = createContext<UserContextType>({
   isFirstTime: false,
   logout: () => {},
   refreshProfile: async () => {},
+  proxyLogin: () => {},
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {
@@ -93,7 +97,33 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Restore proxy session from localStorage (temporary login)
+    try {
+      const raw = localStorage.getItem(PROXY_SESSION_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as KynUser;
+        if (saved?.phone) {
+          setUser(saved);
+          setAuthStatus('checking_membership');
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+
     setAuthStatus('unauthenticated');
+  }, []);
+
+  const proxyLogin = useCallback((u: { phone: string; name: string; kynUsername: string }) => {
+    const session: KynUser = {
+      phone: u.phone,
+      name: u.name,
+      userId: `proxy_${u.phone}`,
+      kynUsername: u.kynUsername,
+    };
+    try { localStorage.setItem(PROXY_SESSION_KEY, JSON.stringify(session)); } catch { /* ignore */ }
+    setUser(session);
+    setProfileLoaded(false);
+    setAuthStatus('checking_membership');
   }, []);
 
   // Membership check
@@ -230,6 +260,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [user, loadProfile]);
 
   const logout = useCallback(() => {
+    try { localStorage.removeItem(PROXY_SESSION_KEY); } catch { /* ignore */ }
     setUser(null);
     setAuthStatus('unauthenticated');
     setDisplayNameState(null);
@@ -263,6 +294,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       isFirstTime,
       logout,
       refreshProfile,
+      proxyLogin,
     }}>
       {children}
     </UserContext.Provider>

@@ -1,11 +1,45 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { OrnamentalDivider } from './OrnamentalDivider';
+import { useUser } from '@/contexts/UserContext';
 import maestroImg from '@/assets/maestro.jpg';
-import { KYN_LOGIN_URL } from '@/lib/kynAuth';
 
-// Shown only when a user opens Lovable directly (e.g. via deep link) without a Kyn token.
-// In-app and mweb flows always arrive with ?token=… and skip this screen.
+// TEMPORARY proxy login while the real Kyn integration is being wired up.
+// Lets a user pick a username + phone to enter the app end-to-end.
 export function LoginFlow() {
+  const { proxyLogin } = useUser();
+  const [username, setUsername] = useState('');
+  const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const handle = username.trim().toLowerCase().replace(/^@+/, '');
+    if (!/^[a-z0-9_.]{3,20}$/.test(handle)) {
+      setError('Username: 3–20 chars (letters, numbers, _ or .)');
+      return;
+    }
+    const cleanPhone = phone.trim().replace(/[^\d]/g, '');
+    if (cleanPhone.length < 6) {
+      setError('Enter a valid phone number');
+      return;
+    }
+    const fullName = name.trim() || handle;
+
+    setBusy(true);
+    try {
+      proxyLogin({ phone: cleanPhone, name: fullName, kynUsername: handle });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-sm">
@@ -23,15 +57,56 @@ export function LoginFlow() {
 
             <OrnamentalDivider className="my-3" />
 
-            <p className="text-muted-foreground text-sm leading-relaxed mb-5">
-              Please log in via Kyn to continue. The quiz is exclusive to Kyn community members.
+            <p className="text-muted-foreground text-xs leading-relaxed mb-4">
+              Temporary login while Kyn integration is being completed.
             </p>
 
-            <a href={KYN_LOGIN_URL} target="_blank" rel="noopener noreferrer">
-              <Button className="w-full bg-[hsl(345,55%,22%)] text-[hsl(35,40%,85%)] hover:bg-[hsl(345,55%,18%)] font-serif text-lg border border-[hsl(35,40%,85%)]/15">
-                Log in via Kyn
+            <form onSubmit={handleSubmit} className="space-y-3 text-left">
+              <div>
+                <Label htmlFor="username" className="text-xs text-muted-foreground">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="@yourhandle"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone" className="text-xs text-muted-foreground">Phone number</Label>
+                <Input
+                  id="phone"
+                  placeholder="9999900001"
+                  inputMode="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="name" className="text-xs text-muted-foreground">Display name (optional)</Label>
+                <Input
+                  id="name"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  autoComplete="off"
+                  className="mt-1"
+                />
+              </div>
+
+              {error && <p className="text-xs text-destructive">{error}</p>}
+
+              <Button
+                type="submit"
+                disabled={busy}
+                className="w-full bg-[hsl(345,55%,22%)] text-[hsl(35,40%,85%)] hover:bg-[hsl(345,55%,18%)] font-serif text-lg border border-[hsl(35,40%,85%)]/15"
+              >
+                {busy ? 'Entering…' : 'Enter Raaja Riddle'}
               </Button>
-            </a>
+            </form>
           </div>
         </div>
       </div>
