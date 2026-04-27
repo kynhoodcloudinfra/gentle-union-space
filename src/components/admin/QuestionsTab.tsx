@@ -363,13 +363,18 @@ function Section({ title, helper, bucket, questions, counts, onPreview, onDelete
                 {bucket === 'live' && (
                   <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Live</span>
                 )}
-                {bucket === 'expired' && q.day_number != null && (
-                  <span className="text-accent font-serif w-9 text-xs">D{q.day_number}</span>
+                {bucket === 'expired' && q.created_at && (
+                  <span className="text-accent font-serif text-[10px] whitespace-nowrap" title={`Created ${new Date(q.created_at).toLocaleString()}`}>
+                    {new Date(q.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
                 )}
                 {bucket === 'upcoming' && scheduled && (
-                  <span className="text-[9px] uppercase tracking-wider text-accent border border-accent/40 px-1 py-0.5 rounded" title={`Scheduled for ${new Date(q.scheduled_for!).toLocaleString()}`}>
-                    Scheduled
+                  <span className="text-[10px] text-accent border border-accent/40 px-1.5 py-0.5 rounded whitespace-nowrap" title={`Scheduled for ${new Date(q.scheduled_for!).toLocaleString()}`}>
+                    {new Date(q.scheduled_for!).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} {new Date(q.scheduled_for!).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                   </span>
+                )}
+                {bucket === 'upcoming' && !scheduled && (
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Unscheduled</span>
                 )}
                 <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{q.question_type}</span>
                 <span className="flex-1 text-xs truncate text-foreground">{q.question_text}</span>
@@ -394,7 +399,7 @@ function Section({ title, helper, bucket, questions, counts, onPreview, onDelete
                     <button
                       onClick={() => onSchedule(q)}
                       className={`p-1 ${scheduled ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
-                      title={scheduled ? `Scheduled: ${new Date(q.scheduled_for!).toLocaleString()}` : 'Schedule'}
+                      title={scheduled ? `Scheduled: ${new Date(q.scheduled_for!).toLocaleString()}` : 'Schedule publish date'}
                     >
                       <Clock size={14} />
                     </button>

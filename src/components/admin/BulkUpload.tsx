@@ -47,17 +47,25 @@ export function BulkUpload({ onSaved }: Props) {
   async function saveAll() {
     setSaving(true);
     // Insert as inactive — system will rotate them in automatically
-    const payload = parsedRows.map(r => ({
-      question_text: r.question_text,
-      option_a: r.option_a ?? null,
-      option_b: r.option_b ?? null,
-      option_c: r.option_c ?? null,
-      option_d: r.option_d ?? null,
-      correct_answer: r.correct_answer,
-      question_type: r.question_type,
-      is_active: false,
-      has_been_live: false,
-    }));
+    const payload = parsedRows.map(r => {
+      let scheduled: string | null = null;
+      if (r.scheduled_for && String(r.scheduled_for).trim()) {
+        const d = new Date(String(r.scheduled_for).trim().replace(' ', 'T'));
+        if (!isNaN(d.getTime())) scheduled = d.toISOString();
+      }
+      return {
+        question_text: r.question_text,
+        option_a: r.option_a ?? null,
+        option_b: r.option_b ?? null,
+        option_c: r.option_c ?? null,
+        option_d: r.option_d ?? null,
+        correct_answer: r.correct_answer,
+        question_type: r.question_type,
+        is_active: false,
+        has_been_live: false,
+        scheduled_for: scheduled,
+      };
+    });
     const { error } = await supabase.from('questions').insert(payload as any);
     setSaving(false);
     if (error) {
@@ -79,7 +87,7 @@ export function BulkUpload({ onSaved }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground mb-2">
-        Questions go into a pool. The system picks a random one each day automatically — no need to assign dates.
+        Add an optional <span className="text-accent">scheduled_for</span> column (e.g. <code>2026-05-01 09:00</code>) to set a publish date. Leave blank for auto-rotation.
       </p>
 
       <input
@@ -99,13 +107,14 @@ export function BulkUpload({ onSaved }: Props) {
                   <th className="p-2 text-left">Question</th>
                   <th className="p-2 text-left">Type</th>
                   <th className="p-2 text-left">Answer</th>
+                  <th className="p-2 text-left">Schedule</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
               <tbody>
                 {parsedRows.map((r, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td className="p-1.5 max-w-[320px]">
+                    <td className="p-1.5 max-w-[280px]">
                       <input
                         value={r.question_text}
                         onChange={e => updateRow(i, 'question_text', e.target.value)}
@@ -127,6 +136,15 @@ export function BulkUpload({ onSaved }: Props) {
                         value={r.correct_answer}
                         onChange={e => updateRow(i, 'correct_answer', e.target.value)}
                         className="w-20 bg-background border border-input rounded px-1.5 py-1 text-xs"
+                      />
+                    </td>
+                    <td className="p-1.5">
+                      <input
+                        type="text"
+                        placeholder="YYYY-MM-DD HH:MM"
+                        value={r.scheduled_for ?? ''}
+                        onChange={e => updateRow(i, 'scheduled_for', e.target.value)}
+                        className="w-36 bg-background border border-input rounded px-1.5 py-1 text-xs"
                       />
                     </td>
                     <td className="p-1.5 text-right">
