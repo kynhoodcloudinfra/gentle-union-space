@@ -91,10 +91,35 @@ export default function Index() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIdentified, isFirstTime, phoneNumber]);
 
+  // Realtime: refresh leaderboard + playedToday when questions or leaderboard change
+  useEffect(() => {
+    if (!isIdentified || isFirstTime) return;
+    const channel = supabase
+      .channel('homepage-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leaderboard' }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, () => {
+        checkPlayedToday();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'submissions' }, (payload) => {
+        const row = (payload.new ?? payload.old) as { phone_number?: string } | null;
+        if (row?.phone_number === phoneNumber) checkPlayedToday();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIdentified, isFirstTime, phoneNumber]);
+
   const me = useMemo(
     () => data.find(e => e.phone_number === phoneNumber),
     [data, phoneNumber]
   );
+
+  // Header reflects live context values immediately (display name + avatar updates)
+  const meDisplayName = ctxDisplayName ?? me?.display_name ?? 'Maestro';
+  const meAvatarId = ctxAvatarId ?? me?.avatar_id ?? null;
+  const meProfileImage = ctxProfileImage ?? me?.profile_image_url ?? null;
 
   const myRank = useMemo(
     () => phoneNumber ? data.findIndex(e => e.phone_number === phoneNumber) + 1 : 0,
