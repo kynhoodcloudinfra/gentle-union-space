@@ -57,7 +57,7 @@ export default function Index() {
         if (e.display_name) agg[e.phone_number].display_name = e.display_name;
         if (e.kyn_username) agg[e.phone_number].kyn_username = e.kyn_username;
       });
-      setData(Object.values(agg).sort((a, b) => b.total_score - a.total_score));
+      setData(Object.values(agg).filter(e => e.total_score > 0).sort((a, b) => b.total_score - a.total_score));
     }
     setLoading(false);
   }
