@@ -32,6 +32,7 @@ const UserContext = createContext<UserContextType>({
   profileImageUrl: null,
   avatarId: null,
   setDisplayName: async () => {},
+  setKynUsername: async () => ({ ok: true as const }),
   setProfileImage: async () => {},
   setAvatarId: async () => {},
   isIdentified: false,
