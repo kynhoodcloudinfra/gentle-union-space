@@ -107,13 +107,14 @@ export function BulkUpload({ onSaved }: Props) {
                   <th className="p-2 text-left">Question</th>
                   <th className="p-2 text-left">Type</th>
                   <th className="p-2 text-left">Answer</th>
+                  <th className="p-2 text-left">Schedule</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
               <tbody>
                 {parsedRows.map((r, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    <td className="p-1.5 max-w-[320px]">
+                    <td className="p-1.5 max-w-[280px]">
                       <input
                         value={r.question_text}
                         onChange={e => updateRow(i, 'question_text', e.target.value)}
@@ -135,6 +136,15 @@ export function BulkUpload({ onSaved }: Props) {
                         value={r.correct_answer}
                         onChange={e => updateRow(i, 'correct_answer', e.target.value)}
                         className="w-20 bg-background border border-input rounded px-1.5 py-1 text-xs"
+                      />
+                    </td>
+                    <td className="p-1.5">
+                      <input
+                        type="text"
+                        placeholder="YYYY-MM-DD HH:MM"
+                        value={r.scheduled_for ?? ''}
+                        onChange={e => updateRow(i, 'scheduled_for', e.target.value)}
+                        className="w-36 bg-background border border-input rounded px-1.5 py-1 text-xs"
                       />
                     </td>
                     <td className="p-1.5 text-right">
