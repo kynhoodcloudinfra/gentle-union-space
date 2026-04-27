@@ -51,6 +51,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [displayName, setDisplayNameState] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrlState] = useState<string | null>(null);
   const [avatarId, setAvatarIdState] = useState<number | null>(null);
+  const [kynUsername, setKynUsernameState] = useState<string | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Mount: parse token or legacy params
