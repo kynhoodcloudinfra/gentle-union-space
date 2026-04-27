@@ -59,9 +59,12 @@ export function QuestionsTab() {
 
   async function addQuestion() {
     setLoading(true);
+    const { scheduled_for, ...rest } = form;
+    const scheduledIso = scheduled_for ? new Date(scheduled_for).toISOString() : null;
+    const base = { ...rest, is_active: false, has_been_live: false, scheduled_for: scheduledIso };
     const payload = form.question_type === 'text'
-      ? { ...form, option_a: null, option_b: null, option_c: null, option_d: null, is_active: false, has_been_live: false }
-      : { ...form, is_active: false, has_been_live: false };
+      ? { ...base, option_a: null, option_b: null, option_c: null, option_d: null }
+      : base;
     const { error } = await supabase.from('questions').insert(payload as any);
     setLoading(false);
     if (error) {
