@@ -278,16 +278,23 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     {(['A', 'B', 'C', 'D'] as const).map(opt => {
                       const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
                       if (!text) return null;
+                      const answered = !!selectedAnswer;
+                      const isCorrectOpt = question.correct_answer.toLowerCase().trim() === opt.toLowerCase();
+                      const isSelected = selectedAnswer === opt;
+                      let stateClass = 'border-border hover:border-accent/50 hover:bg-secondary';
+                      if (answered && isCorrectOpt) {
+                        stateClass = 'border-green-500 bg-green-500/15 text-green-400';
+                      } else if (answered && isSelected && !isCorrectOpt) {
+                        stateClass = 'border-red-500 bg-red-500/15 text-red-400';
+                      } else if (isSelected) {
+                        stateClass = 'border-accent bg-accent/10';
+                      }
                       return (
                         <button
                           key={opt}
                           onClick={() => { setSelectedAnswer(opt); submitAnswer(opt); }}
-                          disabled={submitting}
-                          className={`w-full text-left p-3.5 rounded-lg border transition-all ${
-                            selectedAnswer === opt
-                              ? 'border-accent bg-accent/10'
-                              : 'border-border hover:border-accent/50 hover:bg-secondary'
-                          } disabled:opacity-50`}
+                          disabled={submitting || answered}
+                          className={`w-full text-left p-3.5 rounded-lg border transition-all ${stateClass} disabled:opacity-90`}
                         >
                           <span className="text-accent font-serif mr-3">{opt}.</span>
                           <span className="text-foreground">{text}</span>
