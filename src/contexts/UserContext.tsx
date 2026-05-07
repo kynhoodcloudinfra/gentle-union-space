@@ -110,19 +110,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
     } catch { /* ignore */ }
 
-    // No session — auto-create an anonymous proxy session so the user lands
-    // straight on the homepage. They'll be prompted for a display name via
-    // the in-app DisplayNamePrompt popup (isFirstTime flow).
-    const anonId = Math.random().toString(36).slice(2, 10);
-    const session: KynUser = {
-      phone: `proxy_anon_${anonId}_${Date.now().toString().slice(-6)}`,
-      name: '',
-      userId: `proxy_anon_${anonId}`,
-      kynUsername: `guest_${anonId}`,
-    };
-    try { localStorage.setItem(PROXY_SESSION_KEY, JSON.stringify(session)); } catch { /* ignore */ }
-    setUser(session);
-    setAuthStatus('checking_membership');
+    // No session — require mobile number entry before proceeding.
+    setAuthStatus('unauthenticated');
   }, []);
 
   const proxyLogin = useCallback((u: { phone: string; name: string; kynUsername: string }) => {
