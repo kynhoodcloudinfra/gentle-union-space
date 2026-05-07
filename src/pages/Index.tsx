@@ -3,6 +3,7 @@ import { useUser } from '@/contexts/UserContext';
 
 import { CommunityGatePopup } from '@/components/CommunityGatePopup';
 import { DisplayNamePrompt } from '@/components/DisplayNamePrompt';
+import { MobileNumberPrompt } from '@/components/MobileNumberPrompt';
 import { ProfileSheet } from '@/components/ProfileSheet';
 import { QuizModal } from '@/components/QuizModal';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
@@ -133,6 +134,8 @@ export default function Index() {
       </div>
     );
   }
+
+  if (authStatus === 'unauthenticated') return <MobileNumberPrompt />;
 
   if (isCommunityMember === false) return <CommunityGatePopup />;
 
