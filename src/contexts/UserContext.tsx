@@ -23,7 +23,6 @@ interface UserContextType {
   logout: () => void;
   refreshProfile: () => Promise<void>;
   proxyLogin: (u: { phone: string; name: string; kynUsername: string }) => void;
-  setMobileNumber: (phone: string) => void;
 }
 
 const PROXY_SESSION_KEY = 'raaja_proxy_session_v1';
