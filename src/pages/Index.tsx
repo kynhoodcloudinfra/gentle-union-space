@@ -135,6 +135,8 @@ export default function Index() {
     );
   }
 
+  if (authStatus === 'unauthenticated') return <MobileNumberPrompt />;
+
   if (isCommunityMember === false) return <CommunityGatePopup />;
 
   const visible = showAll ? data : data.slice(0, 10);
