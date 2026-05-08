@@ -12,6 +12,8 @@ interface UserContextType {
   displayName: string | null;     // What they chose to show on the leaderboard
   profileImageUrl: string | null; // Custom uploaded image (overrides avatar_id)
   avatarId: number | null;
+  prefillPhoneNumber: string | null;  // Phone number from query params for prefilling
+  prefillName: string | null;         // Name from query params for prefilling
   setDisplayName: (name: string) => Promise<void>;
   setKynUsername: (username: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   setProfileImage: (url: string | null) => Promise<void>;
@@ -34,6 +36,8 @@ const UserContext = createContext<UserContextType>({
   displayName: null,
   profileImageUrl: null,
   avatarId: null,
+  prefillPhoneNumber: null,
+  prefillName: null,
   setDisplayName: async () => {},
   setKynUsername: async () => ({ ok: true as const }),
   setProfileImage: async () => {},
@@ -57,6 +61,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [avatarId, setAvatarIdState] = useState<number | null>(null);
   const [kynUsername, setKynUsernameState] = useState<string | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [prefillPhoneNumber, setPrefillPhoneNumber] = useState<string | null>(null);
+  const [prefillName, setPrefillName] = useState<string | null>(null);
 
   // Mount: parse token or legacy params
   // Kyn login flow re-enabled so login + logout can be tested end-to-end.
@@ -79,6 +85,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const name = searchParams.get('name');
     const kynUsername = searchParams.get('kynUsername') || '';
 
+    // Store prefill values from query params for components to use
+    if (phoneNumber) setPrefillPhoneNumber(phoneNumber);
+    if (name) setPrefillName(name);
+
     if (token) {
       const decoded = decodeToken(token);
       if (decoded) {
@@ -91,8 +101,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    if (phoneNumber && name) {
-      setUser({ phone: phoneNumber, name, userId: `legacy_${phoneNumber}`, kynUsername });
+    // If phoneNumber is provided, auto-login with it (name can be set later in DisplayNamePrompt)
+    if (phoneNumber) {
+      setUser({ phone: phoneNumber, name: name || '', userId: `legacy_${phoneNumber}`, kynUsername });
       setAuthStatus('checking_membership');
       return;
     }
@@ -285,6 +296,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       displayName,
       profileImageUrl,
       avatarId,
+      prefillPhoneNumber,
+      prefillName,
       setDisplayName,
       setKynUsername,
       setProfileImage,

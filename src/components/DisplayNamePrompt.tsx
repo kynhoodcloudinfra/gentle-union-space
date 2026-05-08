@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,9 +6,15 @@ import { OrnamentalDivider } from './OrnamentalDivider';
 
 // Non-intrusive first-time popup. Prefilled with the user's Kyn name; they can edit or accept.
 export function DisplayNamePrompt() {
-  const { name, setDisplayName } = useUser();
-  const [inputName, setInputName] = useState(name ?? '');
+  const { name, setDisplayName, prefillName } = useUser();
+  const [inputName, setInputName] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Prefill from prefillName (query param) or name (Kyn) in that order
+  useEffect(() => {
+    const valueToUse = prefillName || name || '';
+    setInputName(valueToUse);
+  }, [prefillName, name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

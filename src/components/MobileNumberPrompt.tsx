@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,15 @@ import { OrnamentalDivider } from './OrnamentalDivider';
 // Mobile number is required before we let the user in. In production this
 // will come from Kyn — this popup is the temporary capture point.
 export function MobileNumberPrompt() {
-  const { proxyLogin } = useUser();
+  const { proxyLogin, prefillPhoneNumber } = useUser();
   const [phone, setPhone] = useState('');
+
+  // Prefill from query params if available
+  useEffect(() => {
+    if (prefillPhoneNumber) {
+      setPhone(prefillPhoneNumber);
+    }
+  }, [prefillPhoneNumber]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -53,7 +60,8 @@ export function MobileNumberPrompt() {
               required
               autoFocus
               maxLength={15}
-              className="bg-background/50 border-border text-base font-serif"
+              disabled={!!prefillPhoneNumber}
+              className="bg-background/50 border-border text-base font-serif disabled:opacity-60 disabled:cursor-not-allowed"
             />
             {error && <p className="text-[11px] text-destructive mt-1.5">{error}</p>}
           </div>
