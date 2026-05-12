@@ -16,10 +16,15 @@ export default function Admin() {
     if (sessionStorage.getItem('raja_admin') === 'true') setAuthenticated(true);
   }, []);
 
-  const handleLogin = () => {
+  const [error, setError] = useState('');
+
+  const handleLogin = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (password === ADMIN_PASSWORD) {
       sessionStorage.setItem('raja_admin', 'true');
       setAuthenticated(true);
+    } else {
+      setError('Incorrect password');
     }
   };
 
@@ -30,17 +35,20 @@ export default function Admin() {
           <h1 className="font-serif text-2xl text-accent gold-glow text-center mb-1">Admin Access</h1>
           <p className="text-xs text-muted-foreground text-center mb-4">Raaja Riddle</p>
           <OrnamentalDivider className="my-3" />
-          <Input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Enter password"
-            className="bg-background mb-3"
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          />
-          <Button onClick={handleLogin} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
-            Enter
-          </Button>
+          <form onSubmit={handleLogin}>
+            <Input
+              type="password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError(''); }}
+              placeholder="Enter password"
+              className="bg-background mb-3"
+              autoFocus
+            />
+            {error && <p className="text-xs text-destructive mb-2">{error}</p>}
+            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
+              Enter
+            </Button>
+          </form>
         </div>
       </div>
     );
