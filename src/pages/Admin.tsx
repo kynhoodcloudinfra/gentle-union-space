@@ -16,10 +16,15 @@ export default function Admin() {
     if (sessionStorage.getItem('raja_admin') === 'true') setAuthenticated(true);
   }, []);
 
-  const handleLogin = () => {
+  const [error, setError] = useState('');
+
+  const handleLogin = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (password === ADMIN_PASSWORD) {
       sessionStorage.setItem('raja_admin', 'true');
       setAuthenticated(true);
+    } else {
+      setError('Incorrect password');
     }
   };
 
