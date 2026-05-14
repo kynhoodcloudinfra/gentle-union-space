@@ -88,7 +88,7 @@ export function BulkUpload({ onSaved }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground mb-2">
-        Add an optional <span className="text-accent">scheduled_for</span> column (e.g. <code>2026-05-01 09:00</code>) to set a publish date. Leave blank for auto-rotation.
+        Optional columns: <span className="text-accent">scheduled_for</span> (e.g. <code>2026-05-01 09:00</code>) and <span className="text-accent">image_url</span> (public URL of an image to show with the question).
       </p>
 
       <input
