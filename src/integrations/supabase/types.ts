@@ -179,6 +179,7 @@ export type Database = {
           day_number: number
           expires_at: string
           id: string
+          image_url: string
           month: string
           option_a: string
           option_b: string
