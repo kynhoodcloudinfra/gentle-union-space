@@ -19,6 +19,7 @@ interface Question {
   question_type: string;
   day_number: number;
   month: string;
+  image_url?: string | null;
 }
 
 interface ResultData {
