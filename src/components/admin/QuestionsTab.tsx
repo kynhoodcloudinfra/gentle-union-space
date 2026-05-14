@@ -74,7 +74,7 @@ export function QuestionsTab() {
     setLoading(true);
     const { scheduled_for, ...rest } = form;
     const scheduledIso = scheduled_for ? new Date(scheduled_for).toISOString() : null;
-    const base = { ...rest, is_active: false, has_been_live: false, scheduled_for: scheduledIso };
+    const base = { ...rest, image_url: form.image_url || null, is_active: false, has_been_live: false, scheduled_for: scheduledIso };
     const payload = form.question_type === 'text'
       ? { ...base, option_a: null, option_b: null, option_c: null, option_d: null }
       : base;
