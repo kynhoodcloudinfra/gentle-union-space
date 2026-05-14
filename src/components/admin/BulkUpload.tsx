@@ -149,6 +149,15 @@ export function BulkUpload({ onSaved }: Props) {
                         className="w-36 bg-background border border-input rounded px-1.5 py-1 text-xs"
                       />
                     </td>
+                    <td className="p-1.5">
+                      <input
+                        type="text"
+                        placeholder="https://…"
+                        value={r.image_url ?? ''}
+                        onChange={e => updateRow(i, 'image_url', e.target.value)}
+                        className="w-44 bg-background border border-input rounded px-1.5 py-1 text-xs"
+                      />
+                    </td>
                     <td className="p-1.5 text-right">
                       <button
                         onClick={() => removeRow(i)}
