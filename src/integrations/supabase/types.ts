@@ -65,6 +65,7 @@ export type Database = {
           expires_at: string | null
           has_been_live: boolean
           id: string
+          image_url: string | null
           is_active: boolean
           month: string | null
           option_a: string | null
@@ -83,6 +84,7 @@ export type Database = {
           expires_at?: string | null
           has_been_live?: boolean
           id?: string
+          image_url?: string | null
           is_active?: boolean
           month?: string | null
           option_a?: string | null
@@ -101,6 +103,7 @@ export type Database = {
           expires_at?: string | null
           has_been_live?: boolean
           id?: string
+          image_url?: string | null
           is_active?: boolean
           month?: string | null
           option_a?: string | null
