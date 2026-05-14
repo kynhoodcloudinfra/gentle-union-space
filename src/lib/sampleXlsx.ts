@@ -9,6 +9,7 @@ export interface QuestionRow {
   correct_answer: string;
   question_type: 'mcq' | 'text';
   scheduled_for?: string;
+  image_url?: string;
 }
 
 export function downloadSampleXlsx() {
@@ -22,20 +23,22 @@ export function downloadSampleXlsx() {
       correct_answer: 'A',
       question_type: 'mcq',
       scheduled_for: '2026-05-01 09:00',
+      image_url: 'https://example.com/poster.jpg',
     },
     {
       question_text: 'In which year did Ilaiyaraaja receive the Padma Bhushan?',
       correct_answer: '2010',
       question_type: 'text',
       scheduled_for: '',
+      image_url: '',
     },
   ];
 
   const ws = XLSX.utils.json_to_sheet(sample, {
-    header: ['question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'question_type', 'scheduled_for'],
+    header: ['question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'question_type', 'scheduled_for', 'image_url'],
   });
   ws['!cols'] = [
-    { wch: 60 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 12 }, { wch: 20 },
+    { wch: 60 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 40 },
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'questions');

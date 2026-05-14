@@ -19,7 +19,20 @@ const blankForm = {
   correct_answer: '',
   question_type: 'mcq' as 'mcq' | 'text',
   scheduled_for: '',
+  image_url: '',
 };
+
+async function uploadQuestionImage(file: File): Promise<string | null> {
+  const ext = file.name.split('.').pop() || 'png';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from('question-images').upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) {
+    toast({ title: 'Image upload failed', description: error.message, variant: 'destructive' });
+    return null;
+  }
+  const { data } = supabase.storage.from('question-images').getPublicUrl(path);
+  return data.publicUrl;
+}
 
 type Bucket = 'live' | 'upcoming' | 'expired';
 
@@ -61,7 +74,7 @@ export function QuestionsTab() {
     setLoading(true);
     const { scheduled_for, ...rest } = form;
     const scheduledIso = scheduled_for ? new Date(scheduled_for).toISOString() : null;
-    const base = { ...rest, is_active: false, has_been_live: false, scheduled_for: scheduledIso };
+    const base = { ...rest, image_url: form.image_url || null, is_active: false, has_been_live: false, scheduled_for: scheduledIso };
     const payload = form.question_type === 'text'
       ? { ...base, option_a: null, option_b: null, option_c: null, option_d: null }
       : base;
@@ -228,6 +241,27 @@ export function QuestionsTab() {
                 className="bg-background"
                 placeholder={form.question_type === 'mcq' ? 'A / B / C / D' : 'The correct text answer'}
               />
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground">Image <span className="text-muted-foreground/60">(optional)</span></label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async e => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const url = await uploadQuestionImage(f);
+                  if (url) setForm(prev => ({ ...prev, image_url: url }));
+                }}
+                className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-serif file:bg-accent file:text-accent-foreground hover:file:bg-accent/90"
+              />
+              {form.image_url && (
+                <div className="mt-2 relative inline-block">
+                  <img src={form.image_url} alt="preview" className="max-h-32 rounded-md border border-border" />
+                  <button type="button" onClick={() => setForm({ ...form, image_url: '' })} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs leading-none">×</button>
+                </div>
+              )}
             </div>
 
             <div>

@@ -64,6 +64,7 @@ export function BulkUpload({ onSaved }: Props) {
         is_active: false,
         has_been_live: false,
         scheduled_for: scheduled,
+        image_url: r.image_url?.trim() || null,
       };
     });
     const { error } = await supabase.from('questions').insert(payload as any);
@@ -87,7 +88,7 @@ export function BulkUpload({ onSaved }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground mb-2">
-        Add an optional <span className="text-accent">scheduled_for</span> column (e.g. <code>2026-05-01 09:00</code>) to set a publish date. Leave blank for auto-rotation.
+        Optional columns: <span className="text-accent">scheduled_for</span> (e.g. <code>2026-05-01 09:00</code>) and <span className="text-accent">image_url</span> (public URL of an image to show with the question).
       </p>
 
       <input
@@ -108,6 +109,7 @@ export function BulkUpload({ onSaved }: Props) {
                   <th className="p-2 text-left">Type</th>
                   <th className="p-2 text-left">Answer</th>
                   <th className="p-2 text-left">Schedule</th>
+                  <th className="p-2 text-left">Image URL</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
@@ -145,6 +147,15 @@ export function BulkUpload({ onSaved }: Props) {
                         value={r.scheduled_for ?? ''}
                         onChange={e => updateRow(i, 'scheduled_for', e.target.value)}
                         className="w-36 bg-background border border-input rounded px-1.5 py-1 text-xs"
+                      />
+                    </td>
+                    <td className="p-1.5">
+                      <input
+                        type="text"
+                        placeholder="https://…"
+                        value={r.image_url ?? ''}
+                        onChange={e => updateRow(i, 'image_url', e.target.value)}
+                        className="w-44 bg-background border border-input rounded px-1.5 py-1 text-xs"
                       />
                     </td>
                     <td className="p-1.5 text-right">

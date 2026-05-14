@@ -19,6 +19,7 @@ interface Question {
   question_type: string;
   day_number: number;
   month: string;
+  image_url?: string | null;
 }
 
 interface ResultData {
@@ -269,6 +270,13 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             <>
               <FilmStripTimer duration={30} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-5">
+                {question.image_url && (
+                  <img
+                    src={question.image_url}
+                    alt="Riddle illustration"
+                    className="w-full max-h-56 object-cover rounded-lg border border-border mb-4"
+                  />
+                )}
                 <h3 className="font-serif text-lg text-foreground leading-relaxed mb-5">
                   {question.question_text}
                 </h3>
