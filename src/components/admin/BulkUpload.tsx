@@ -109,6 +109,7 @@ export function BulkUpload({ onSaved }: Props) {
                   <th className="p-2 text-left">Type</th>
                   <th className="p-2 text-left">Answer</th>
                   <th className="p-2 text-left">Schedule</th>
+                  <th className="p-2 text-left">Image URL</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
