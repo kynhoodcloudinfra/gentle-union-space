@@ -64,7 +64,7 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
         correct_answer: form.correct_answer,
         question_type: form.question_type,
         image_url: form.image_url || null,
-      })
+      } as any)
       .eq('id', form.id);
     setSaving(false);
     if (error) {
