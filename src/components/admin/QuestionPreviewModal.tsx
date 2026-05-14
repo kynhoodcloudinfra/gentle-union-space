@@ -141,6 +141,45 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
             )}
           </div>
 
+          <div>
+            <label className="text-xs text-muted-foreground">Image</label>
+            {editing ? (
+              <div className="space-y-2 mt-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async e => {
+                    const f = e.target.files?.[0];
+                    if (!f || !form) return;
+                    const ext = f.name.split('.').pop() || 'png';
+                    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+                    const { error: upErr } = await supabase.storage.from('question-images').upload(path, f);
+                    if (upErr) { toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' }); return; }
+                    const { data } = supabase.storage.from('question-images').getPublicUrl(path);
+                    setForm({ ...form, image_url: data.publicUrl });
+                  }}
+                  className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-serif file:bg-accent file:text-accent-foreground"
+                />
+                <Input
+                  placeholder="…or paste an image URL"
+                  value={form.image_url ?? ''}
+                  onChange={e => setForm({ ...form, image_url: e.target.value })}
+                  className="bg-background"
+                />
+                {form.image_url && (
+                  <div className="relative inline-block">
+                    <img src={form.image_url} alt="preview" className="max-h-32 rounded-md border border-border" />
+                    <button type="button" onClick={() => setForm({ ...form, image_url: '' })} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs leading-none">×</button>
+                  </div>
+                )}
+              </div>
+            ) : form.image_url ? (
+              <img src={form.image_url} alt="Question" className="mt-1 max-h-48 w-full object-contain rounded-md border border-border bg-background/50" />
+            ) : (
+              <p className="text-xs text-muted-foreground/60 italic mt-1">No image</p>
+            )}
+          </div>
+
           {isMcq && (
             <div className={`space-y-2 ${isLocked && !editing ? 'max-w-md mx-auto text-left' : ''}`}>
               {(['a', 'b', 'c', 'd'] as const).map(opt => {
