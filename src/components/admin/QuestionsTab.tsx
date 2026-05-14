@@ -19,7 +19,20 @@ const blankForm = {
   correct_answer: '',
   question_type: 'mcq' as 'mcq' | 'text',
   scheduled_for: '',
+  image_url: '',
 };
+
+async function uploadQuestionImage(file: File): Promise<string | null> {
+  const ext = file.name.split('.').pop() || 'png';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from('question-images').upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) {
+    toast({ title: 'Image upload failed', description: error.message, variant: 'destructive' });
+    return null;
+  }
+  const { data } = supabase.storage.from('question-images').getPublicUrl(path);
+  return data.publicUrl;
+}
 
 type Bucket = 'live' | 'upcoming' | 'expired';
 
