@@ -64,6 +64,7 @@ export function BulkUpload({ onSaved }: Props) {
         is_active: false,
         has_been_live: false,
         scheduled_for: scheduled,
+        image_url: r.image_url?.trim() || null,
       };
     });
     const { error } = await supabase.from('questions').insert(payload as any);
