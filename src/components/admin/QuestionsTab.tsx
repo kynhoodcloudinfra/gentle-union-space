@@ -244,6 +244,27 @@ export function QuestionsTab() {
             </div>
 
             <div>
+              <label className="text-xs text-muted-foreground">Image <span className="text-muted-foreground/60">(optional)</span></label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async e => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const url = await uploadQuestionImage(f);
+                  if (url) setForm(prev => ({ ...prev, image_url: url }));
+                }}
+                className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-serif file:bg-accent file:text-accent-foreground hover:file:bg-accent/90"
+              />
+              {form.image_url && (
+                <div className="mt-2 relative inline-block">
+                  <img src={form.image_url} alt="preview" className="max-h-32 rounded-md border border-border" />
+                  <button type="button" onClick={() => setForm({ ...form, image_url: '' })} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs leading-none">×</button>
+                </div>
+              )}
+            </div>
+
+            <div>
               <label className="text-xs text-muted-foreground">Scheduled Publish Date <span className="text-muted-foreground/60">(optional)</span></label>
               <Input
                 type="datetime-local"
