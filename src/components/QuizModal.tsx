@@ -128,7 +128,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     const isCorrect = question.question_type === 'mcq'
       ? answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
       : answer === question.correct_answer;
-    const score = isCorrect ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 125 : 100) : 0;
+    const score = isCorrect ? (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100) : 0;
 
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
