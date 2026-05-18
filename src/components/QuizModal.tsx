@@ -221,11 +221,11 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card border-border film-grain p-0 gap-0 overflow-hidden">
-        <div className="p-6">
-          <div className="text-center mb-3">
-            <h2 className="font-serif text-2xl text-accent gold-glow">Today's Riddle</h2>
-            <OrnamentalDivider className="my-2" />
+      <DialogContent className="max-w-sm bg-card border-border film-grain p-0 gap-0 overflow-hidden max-h-[90vh]">
+        <div className="p-4 overflow-y-auto max-h-[90vh]">
+          <div className="text-center mb-2">
+            <h2 className="font-serif text-xl text-accent gold-glow tracking-wide">Today's Riddle</h2>
+            <OrnamentalDivider className="my-1.5" />
           </div>
 
           {loading ? (
