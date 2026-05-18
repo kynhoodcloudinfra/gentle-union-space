@@ -23,7 +23,7 @@ export function downloadSampleXlsx() {
       correct_answer: 'A',
       question_type: 'mcq',
       scheduled_for: '2026-05-01 09:00',
-      image_url: 'https://example.com/poster.jpg',
+      image_url: 'https://example.com/landscape-1200x900.jpg',
     },
     {
       question_text: 'In which year did Ilaiyaraaja receive the Padma Bhushan?',

@@ -89,6 +89,7 @@ export function BulkUpload({ onSaved }: Props) {
 
       <p className="text-xs text-muted-foreground mb-2">
         Optional columns: <span className="text-accent">scheduled_for</span> (e.g. <code>2026-05-01 09:00</code>) and <span className="text-accent">image_url</span> (public URL of an image to show with the question).
+        Use landscape 4:3 images, ideally 1200×900 px; the quiz will show the complete image without cropping.
       </p>
 
       <input
