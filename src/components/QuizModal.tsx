@@ -93,10 +93,10 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           .limit(1)
           .maybeSingle();
 
-        const time = existing.time_taken_seconds ?? 30;
+        const time = existing.time_taken_seconds ?? 60;
         setResult({
           isCorrect: existing.is_correct,
-          score: existing.is_correct ? (time <= 10 ? 150 : time <= 20 ? 125 : 100) : 0,
+          score: existing.is_correct ? (time <= 20 ? 150 : time <= 40 ? 125 : 100) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
           // @ts-ignore — joined relation
@@ -128,7 +128,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     const isCorrect = question.question_type === 'mcq'
       ? answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
       : answer === question.correct_answer;
-    const score = isCorrect ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 125 : 100) : 0;
+    const score = isCorrect ? (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100) : 0;
 
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
@@ -268,7 +268,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer duration={30} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-5">
                 {question.image_url && (
                   <img
