@@ -269,27 +269,27 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           ) : (
             <>
               <FilmStripTimer duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
-              <div className="mt-5">
+              <div className="mt-3">
                 {question.image_url && (
                   <img
                     src={question.image_url}
                     alt="Riddle illustration"
-                    className="w-full max-h-56 object-cover rounded-lg border border-border mb-4"
+                    className="w-full max-h-32 object-cover rounded-md border border-border/70 mb-3 shadow-sm"
                   />
                 )}
-                <h3 className="font-serif text-lg text-foreground leading-relaxed mb-5">
+                <h3 className="font-serif text-base text-foreground leading-snug mb-3 text-center">
                   {question.question_text}
                 </h3>
 
                 {question.question_type === 'mcq' ? (
-                  <div className="space-y-2.5">
+                  <div className="space-y-1.5">
                     {(['A', 'B', 'C', 'D'] as const).map(opt => {
                       const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
                       if (!text) return null;
                       const answered = !!selectedAnswer;
                       const isCorrectOpt = question.correct_answer.toLowerCase().trim() === opt.toLowerCase();
                       const isSelected = selectedAnswer === opt;
-                      let stateClass = 'border-border hover:border-accent/50 hover:bg-secondary';
+                      let stateClass = 'border-border/60 hover:border-accent/60 hover:bg-accent/5';
                       if (answered && isCorrectOpt) {
                         stateClass = 'border-green-500 bg-green-500/15 text-green-400';
                       } else if (answered && isSelected && !isCorrectOpt) {
@@ -302,9 +302,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                           key={opt}
                           onClick={() => { setSelectedAnswer(opt); submitAnswer(opt); }}
                           disabled={submitting || answered}
-                          className={`w-full text-left p-3.5 rounded-lg border transition-all ${stateClass} disabled:opacity-90`}
+                          className={`w-full text-left px-3 py-2.5 rounded-md border text-sm transition-all ${stateClass} disabled:opacity-90 flex items-center gap-2.5`}
                         >
-                          <span className="text-accent font-serif mr-3">{opt}.</span>
+                          <span className="text-accent font-serif text-base w-5 shrink-0">{opt}.</span>
                           <span className="text-foreground">{text}</span>
                         </button>
                       );
