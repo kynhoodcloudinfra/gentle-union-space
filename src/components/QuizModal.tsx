@@ -271,11 +271,13 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
               <FilmStripTimer duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-3">
                 {question.image_url && (
-                  <img
-                    src={question.image_url}
-                    alt="Riddle illustration"
-                    className="w-full max-h-32 object-cover rounded-md border border-border/70 mb-3 shadow-sm"
-                  />
+                  <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
+                    <img
+                      src={question.image_url}
+                      alt="Riddle illustration"
+                      className="h-auto max-h-[180px] w-auto max-w-full object-contain sm:max-h-[220px]"
+                    />
+                  </div>
                 )}
                 <h3 className="font-serif text-base text-foreground leading-snug mb-3 text-center">
                   {question.question_text}

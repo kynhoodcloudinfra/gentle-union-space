@@ -245,6 +245,9 @@ export function QuestionsTab() {
 
             <div>
               <label className="text-xs text-muted-foreground">Image <span className="text-muted-foreground/60">(optional)</span></label>
+              <p className="mb-2 text-[10px] text-muted-foreground">
+                Recommended upload: landscape 4:3 ratio, 1200×900 px. The quiz displays the full image without cropping.
+              </p>
               <input
                 type="file"
                 accept="image/*"
@@ -257,8 +260,8 @@ export function QuestionsTab() {
                 className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-serif file:bg-accent file:text-accent-foreground hover:file:bg-accent/90"
               />
               {form.image_url && (
-                <div className="mt-2 relative inline-block">
-                  <img src={form.image_url} alt="preview" className="max-h-32 rounded-md border border-border" />
+                <div className="mt-2 relative inline-flex max-h-32 max-w-full items-center justify-center rounded-md border border-border bg-secondary/30 p-1">
+                  <img src={form.image_url} alt="preview" className="max-h-28 max-w-full object-contain" />
                   <button type="button" onClick={() => setForm({ ...form, image_url: '' })} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs leading-none">×</button>
                 </div>
               )}
