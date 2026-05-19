@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OrnamentalDivider } from './OrnamentalDivider';
 import { avatarMap } from '@/lib/avatars';
-import { LogOut, Upload, Image as ImageIcon, Check, Pencil, X } from 'lucide-react';
+import { LogOut, Upload, Image as ImageIcon, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ProfileSheetProps {
@@ -18,31 +17,14 @@ interface ProfileSheetProps {
 export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
   const {
     phoneNumber, displayName, kynUsername, avatarId, profileImageUrl,
-    setAvatarId, setProfileImage, setKynUsername, logout,
+    setAvatarId, setProfileImage, logout,
   } = useUser();
   const [tab, setTab] = useState<'pick' | 'upload'>('pick');
   const [uploading, setUploading] = useState(false);
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [usernameDraft, setUsernameDraft] = useState(kynUsername ?? '');
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [savingUsername, setSavingUsername] = useState(false);
-
-  useEffect(() => { setUsernameDraft(kynUsername ?? ''); }, [kynUsername, open]);
-
-  async function handleSaveUsername() {
-    setSavingUsername(true);
-    setUsernameError(null);
-    const res = await setKynUsername(usernameDraft);
-    setSavingUsername(false);
-    if (!res.ok) {
-      setUsernameError((res as { ok: false; error: string }).error);
-      return;
-    }
-    toast({ title: 'Username updated' });
-    setEditingUsername(false);
-  }
 
   const avatarIds = Object.keys(avatarMap).map(Number).sort((a, b) => a - b);
+
+
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -155,58 +137,9 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
             <span className="text-muted-foreground">Display name</span>
             <span className="text-foreground font-serif">{displayName ?? '—'}</span>
           </div>
-          <div className="py-1.5 border-b border-border/50">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Username</span>
-              {!editingUsername ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-foreground font-serif">{kynUsername ? `@${kynUsername}` : '—'}</span>
-                  <button
-                    onClick={() => { setEditingUsername(true); setUsernameError(null); }}
-                    className="text-muted-foreground hover:text-accent"
-                    aria-label="Edit username"
-                  >
-                    <Pencil size={13} />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => { setEditingUsername(false); setUsernameDraft(kynUsername ?? ''); setUsernameError(null); }}
-                  className="text-muted-foreground hover:text-foreground"
-                  aria-label="Cancel"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-            {editingUsername && (
-              <div className="mt-2 space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-muted-foreground font-serif">@</span>
-                  <Input
-                    value={usernameDraft}
-                    onChange={e => { setUsernameDraft(e.target.value); setUsernameError(null); }}
-                    placeholder="your_handle"
-                    maxLength={20}
-                    className="bg-background h-8 text-sm"
-                    autoFocus
-                  />
-                  <Button
-                    onClick={handleSaveUsername}
-                    disabled={savingUsername || !usernameDraft.trim()}
-                    size="sm"
-                    className="h-8 bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
-                  >
-                    {savingUsername ? '…' : 'Save'}
-                  </Button>
-                </div>
-                {usernameError ? (
-                  <p className="text-[11px] text-destructive">{usernameError}</p>
-                ) : (
-                  <p className="text-[10px] text-muted-foreground">3–20 chars · letters, numbers, _ or . · must be unique</p>
-                )}
-              </div>
-            )}
+          <div className="py-1.5 border-b border-border/50 flex justify-between items-center">
+            <span className="text-muted-foreground">Username</span>
+            <span className="text-foreground font-serif">{kynUsername ? `@${kynUsername}` : '—'}</span>
           </div>
         </div>
 
