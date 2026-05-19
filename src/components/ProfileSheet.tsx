@@ -130,14 +130,7 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
           )}
         </div>
 
-        <OrnamentalDivider className="my-5" />
-
-        <div className="space-y-2 text-sm">
-          <div className="py-1.5 border-b border-border/50 flex justify-between items-center">
-            <span className="text-muted-foreground">Kyn username</span>
-            <span className="text-foreground font-serif">{kynUsername ? `@${kynUsername}` : '—'}</span>
-          </div>
-        </div>
+       
 
         <Button
           onClick={handleLogout}
