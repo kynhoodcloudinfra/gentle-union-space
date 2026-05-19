@@ -402,6 +402,7 @@ function LeaderRow({ entry, rank, isUser }: { entry: LeaderboardEntry; rank: num
       <AvatarDisplay
         avatarId={entry.avatar_id}
         imageUrl={entry.profile_image_url}
+        seed={entry.phone_number}
         size={32}
       />
       <div className="flex-1 min-w-0">
