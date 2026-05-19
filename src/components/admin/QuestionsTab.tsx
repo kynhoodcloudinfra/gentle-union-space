@@ -429,6 +429,16 @@ function Section({ title, helper, bucket, questions, counts, onPreview, onDelete
                   <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Unscheduled</span>
                 )}
                 <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{q.question_type}</span>
+                {q.image_url ? (
+                  <img
+                    src={q.image_url}
+                    alt=""
+                    className="w-8 h-8 object-cover rounded border border-border/60 shrink-0"
+                    title="Has image"
+                  />
+                ) : (
+                  <span className="w-8 h-8 rounded border border-dashed border-border/40 shrink-0 flex items-center justify-center text-[8px] text-muted-foreground/50" title="No image">—</span>
+                )}
                 <span className="flex-1 text-xs truncate text-foreground">{q.question_text}</span>
                 {responses > 0 && (
                   <button
