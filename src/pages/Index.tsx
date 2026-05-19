@@ -370,6 +370,7 @@ function PodiumPlace({ entry, rank }: { entry: LeaderboardEntry; rank: 1 | 2 | 3
       <AvatarDisplay
         avatarId={entry.avatar_id}
         imageUrl={entry.profile_image_url}
+        seed={entry.phone_number}
         size={avatarSize}
         className={isFirst ? 'ring-2 ring-[hsl(40,55%,55%)] shadow-lg shadow-accent/20' : 'ring-2 ring-accent/30'}
       />
