@@ -260,12 +260,20 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                 const k = `option_${letter.toLowerCase()}` as keyof Question;
                 return (q[k] as string) ?? '';
               };
+              const correctNormR = (result.correctAnswer ?? '').toLowerCase().trim();
+              const correctLetter = isMcq
+                ? (['A','B','C','D'].find(l => optText(l).toLowerCase().trim() === correctNormR) ?? '')
+                : '';
               const fmt = (ans: string) => {
                 if (!ans) return '—';
                 if (ans === '(timed out)') return '(timed out)';
                 if (isMcq) {
+                  // ans may be a letter (user) or option text (correct_answer stored as text)
                   const L = ans.toUpperCase().trim();
-                  return optText(L) ? `${L}. ${optText(L)}` : ans;
+                  if (['A','B','C','D'].includes(L) && optText(L)) return `${L}. ${optText(L)}`;
+                  const matched = ['A','B','C','D'].find(l => optText(l).toLowerCase().trim() === ans.toLowerCase().trim());
+                  if (matched) return `${matched}. ${optText(matched)}`;
+                  return ans;
                 }
                 return ans;
               };
