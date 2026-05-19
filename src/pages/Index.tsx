@@ -163,6 +163,7 @@ export default function Index() {
               <AvatarDisplay
                 avatarId={meAvatarId}
                 imageUrl={meProfileImage}
+                seed={phoneNumber}
                 size={42}
                 className="ring-2 ring-accent/30 group-hover:ring-accent/60 transition-all"
               />
