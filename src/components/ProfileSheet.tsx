@@ -62,9 +62,9 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
 
         <div className="flex flex-col items-center mt-4">
           <AvatarDisplay avatarId={avatarId} imageUrl={profileImageUrl} seed={phoneNumber} size={96} className="ring-2 ring-accent/40" />
-          <p className="font-serif text-xl text-foreground mt-3">{displayName ?? '—'}</p>
-          {kynUsername && (
-            <p className="text-xs text-muted-foreground tracking-wide">@{kynUsername}</p>
+          <p className="font-serif text-2xl text-accent gold-glow mt-3">{kynUsername ? `@${kynUsername}` : '—'}</p>
+          {displayName && (
+            <p className="text-xs text-muted-foreground mt-0.5">{displayName}</p>
           )}
         </div>
 
