@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/lib/supabase';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OrnamentalDivider } from './OrnamentalDivider';
 import { avatarMap } from '@/lib/avatars';
-import { LogOut, Upload, Image as ImageIcon, Check, Pencil, X } from 'lucide-react';
+import { LogOut, Upload, Image as ImageIcon, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ProfileSheetProps {
@@ -18,31 +17,14 @@ interface ProfileSheetProps {
 export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
   const {
     phoneNumber, displayName, kynUsername, avatarId, profileImageUrl,
-    setAvatarId, setProfileImage, setKynUsername, logout,
+    setAvatarId, setProfileImage, logout,
   } = useUser();
   const [tab, setTab] = useState<'pick' | 'upload'>('pick');
   const [uploading, setUploading] = useState(false);
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [usernameDraft, setUsernameDraft] = useState(kynUsername ?? '');
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [savingUsername, setSavingUsername] = useState(false);
-
-  useEffect(() => { setUsernameDraft(kynUsername ?? ''); }, [kynUsername, open]);
-
-  async function handleSaveUsername() {
-    setSavingUsername(true);
-    setUsernameError(null);
-    const res = await setKynUsername(usernameDraft);
-    setSavingUsername(false);
-    if (!res.ok) {
-      setUsernameError((res as { ok: false; error: string }).error);
-      return;
-    }
-    toast({ title: 'Username updated' });
-    setEditingUsername(false);
-  }
 
   const avatarIds = Object.keys(avatarMap).map(Number).sort((a, b) => a - b);
+
+
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
