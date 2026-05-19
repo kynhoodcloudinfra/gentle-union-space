@@ -28,6 +28,8 @@ interface ResultData {
   totalScore: number;
   streak: number;
   correctAnswer: string;
+  userAnswer: string;
+  question: Question;
 }
 
 interface QuizModalProps {
