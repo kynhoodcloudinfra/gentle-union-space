@@ -200,6 +200,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
         totalScore: existingLb.total_score + score,
         streak: newStreak,
         correctAnswer: question.correct_answer,
+        userAnswer: answer,
+        question,
       });
     } else {
       await supabase.from('leaderboard').insert({
@@ -219,6 +221,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
         totalScore: score,
         streak: 1,
         correctAnswer: question.correct_answer,
+        userAnswer: answer,
+        question,
       });
     }
 
