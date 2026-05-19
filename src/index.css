@@ -91,22 +91,31 @@
   box-shadow: inset 0 0 80px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Themed scrollbar (matches burgundy + gold palette) */
-.themed-scroll {
+/* Themed scrollbar (matches beige/gold accent) — applied app-wide */
+* {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--accent) / 0.5) transparent;
+  scrollbar-color: hsl(var(--accent) / 0.45) transparent;
 }
-.themed-scroll::-webkit-scrollbar {
+*::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-.themed-scroll::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
-.themed-scroll::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background-color: hsl(var(--accent) / 0.4);
   border-radius: 9999px;
 }
-.themed-scroll::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--accent) / 0.7);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Backwards-compat alias used by some components */
+.themed-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--accent) / 0.45) transparent;
 }
