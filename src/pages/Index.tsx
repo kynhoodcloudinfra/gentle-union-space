@@ -279,12 +279,12 @@ export default function Index() {
           ) : (
             <>
               {/* Podium */}
-              {podium.length >= 3 && <Podium podium={podium} />}
+              {hasPodium && <Podium podium={podium} />}
 
-              {/* List 4..N */}
+              {/* List */}
               <div className="space-y-1.5">
                 {rest.map((entry, i) => {
-                  const rank = i + 4;
+                  const rank = hasPodium ? i + 4 : i + 1;
                   const isUser = entry.phone_number === phoneNumber;
                   return <LeaderRow key={entry.phone_number} entry={entry} rank={rank} isUser={isUser} />;
                 })}
