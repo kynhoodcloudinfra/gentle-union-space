@@ -28,6 +28,8 @@ interface ResultData {
   totalScore: number;
   streak: number;
   correctAnswer: string;
+  userAnswer: string;
+  question: Question;
 }
 
 interface QuizModalProps {
@@ -107,8 +109,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           score: existing.is_correct ? (time <= 20 ? 150 : time <= 40 ? 125 : 100) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
-          // @ts-ignore — joined relation
-          correctAnswer: existing.questions?.correct_answer ?? '',
+          correctAnswer: live.correct_answer,
+          userAnswer: existing.answer_given ?? '',
+          question: live as Question,
         });
         setLoading(false);
         return;
@@ -197,6 +200,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
         totalScore: existingLb.total_score + score,
         streak: newStreak,
         correctAnswer: question.correct_answer,
+        userAnswer: answer,
+        question,
       });
     } else {
       await supabase.from('leaderboard').insert({
@@ -216,6 +221,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
         totalScore: score,
         streak: 1,
         correctAnswer: question.correct_answer,
+        userAnswer: answer,
+        question,
       });
     }
 
@@ -239,35 +246,71 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           {loading ? (
             <p className="text-center text-muted-foreground py-12 font-serif">Loading…</p>
           ) : result ? (
-            <div className="text-center">
-              <div className="text-5xl mb-3">{result.isCorrect ? '🎉' : '😔'}</div>
-              <h3 className="font-serif text-2xl mb-2 text-accent">
-                {result.isCorrect ? 'Correct!' : 'Wrong!'}
-              </h3>
-              {!result.isCorrect && (
-                <p className="text-muted-foreground text-sm mb-3">
-                  Answer: <span className="text-accent">{result.correctAnswer}</span>
-                </p>
-              )}
-              <OrnamentalDivider />
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div>
-                  <p className="text-2xl font-serif text-accent">+{result.score}</p>
-                  <p className="text-xs text-muted-foreground">Points</p>
+            (() => {
+              const q = result.question;
+              const isMcq = q.question_type === 'mcq';
+              const optText = (letter: string) => {
+                const k = `option_${letter.toLowerCase()}` as keyof Question;
+                return (q[k] as string) ?? '';
+              };
+              const fmt = (ans: string) => {
+                if (!ans) return '—';
+                if (ans === '(timed out)') return '(timed out)';
+                if (isMcq) {
+                  const L = ans.toUpperCase().trim();
+                  return optText(L) ? `${L}. ${optText(L)}` : ans;
+                }
+                return ans;
+              };
+              return (
+                <div className="text-center">
+                  <div className="text-5xl mb-2">{result.isCorrect ? '🎉' : '😔'}</div>
+                  <h3 className="font-serif text-2xl mb-3 text-accent">
+                    {result.isCorrect ? 'Correct!' : 'Wrong!'}
+                  </h3>
+
+                  <div className="text-left bg-background/40 border border-border/60 rounded-lg p-3 mb-3 space-y-2">
+                    {q.image_url && (
+                      <div className="flex max-h-[120px] w-full items-center justify-center overflow-hidden rounded-md border border-border/60 bg-secondary/30">
+                        <img src={q.image_url} alt="Riddle" className="h-auto max-h-[120px] w-auto max-w-full object-contain" />
+                      </div>
+                    )}
+                    <p className="font-serif text-sm text-foreground leading-snug">{q.question_text}</p>
+                    <div className="pt-1 border-t border-border/40 space-y-1.5 text-xs">
+                      <div className="flex gap-2">
+                        <span className="text-muted-foreground shrink-0 w-24">Correct answer</span>
+                        <span className="text-green-400 font-serif">{fmt(result.correctAnswer)}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-muted-foreground shrink-0 w-24">Your answer</span>
+                        <span className={`font-serif ${result.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                          {fmt(result.userAnswer)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <OrnamentalDivider />
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                      <p className="text-2xl font-serif text-accent">+{result.score}</p>
+                      <p className="text-xs text-muted-foreground">Points</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-serif text-foreground">{result.totalScore}</p>
+                      <p className="text-xs text-muted-foreground">Total</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-serif text-foreground">{result.streak} 🔥</p>
+                      <p className="text-xs text-muted-foreground">Streak</p>
+                    </div>
+                  </div>
+                  <Button onClick={() => onOpenChange(false)} className="w-full mt-6 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
+                    Back to Leaderboard
+                  </Button>
                 </div>
-                <div>
-                  <p className="text-2xl font-serif text-foreground">{result.totalScore}</p>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-serif text-foreground">{result.streak} 🔥</p>
-                  <p className="text-xs text-muted-foreground">Streak</p>
-                </div>
-              </div>
-              <Button onClick={() => onOpenChange(false)} className="w-full mt-6 bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
-                Back to Leaderboard
-              </Button>
-            </div>
+              );
+            })()
           ) : !question ? (
             <div className="text-center py-8">
               <h3 className="font-serif text-xl text-accent mb-2">No Riddle Available</h3>
@@ -276,7 +319,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer key={question.id} duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-3">
                 {question.image_url && (
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
