@@ -140,8 +140,9 @@ export default function Index() {
   if (isCommunityMember === false) return <CommunityGatePopup />;
 
   const visible = showAll ? data : data.slice(0, 10);
-  const podium = data.slice(0, 3);
-  const rest = visible.slice(3);
+  const hasPodium = data.length >= 3;
+  const podium = hasPodium ? data.slice(0, 3) : [];
+  const rest = hasPodium ? visible.slice(3) : visible;
   const meInVisible = me && visible.some(e => e.phone_number === me.phone_number);
 
   return (
@@ -278,12 +279,12 @@ export default function Index() {
           ) : (
             <>
               {/* Podium */}
-              {podium.length >= 3 && <Podium podium={podium} />}
+              {hasPodium && <Podium podium={podium} />}
 
-              {/* List 4..N */}
+              {/* List */}
               <div className="space-y-1.5">
                 {rest.map((entry, i) => {
-                  const rank = i + 4;
+                  const rank = hasPodium ? i + 4 : i + 1;
                   const isUser = entry.phone_number === phoneNumber;
                   return <LeaderRow key={entry.phone_number} entry={entry} rank={rank} isUser={isUser} />;
                 })}
