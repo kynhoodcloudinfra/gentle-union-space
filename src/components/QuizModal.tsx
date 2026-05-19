@@ -221,8 +221,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm bg-card border-border film-grain p-0 gap-0 overflow-hidden max-h-[90vh]">
-        <div className="p-4 overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-sm bg-card border-border film-grain p-4 gap-0 max-h-[90vh] overflow-y-auto themed-scroll">
+        <div>
           <div className="text-center mb-2">
             <h2 className="font-serif text-xl text-accent gold-glow tracking-wide">Today's Riddle</h2>
             <OrnamentalDivider className="my-1.5" />
