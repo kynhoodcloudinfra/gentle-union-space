@@ -229,6 +229,24 @@ export default function Index() {
             </button>
           )}
 
+          {/* What's the prize? */}
+          <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/30 rounded-2xl p-4 mb-6 film-grain overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,hsl(40,55%,55%,0.12),transparent_65%)] pointer-events-none" />
+            <div className="flex items-start gap-3 relative">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center">
+                <Gift size={18} className="text-accent" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] tracking-[0.25em] uppercase text-accent/80 font-serif">Coming Soon</p>
+                <h2 className="font-serif text-lg text-accent gold-glow leading-tight">What's the prize?</h2>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Play and earn points to unlock an exclusive prize. The prize will be revealed soon — stay tuned.
+                </p>
+              </div>
+            </div>
+          </div>
+
+
           {/* Leaderboard heading + legend */}
           <div className="flex items-center justify-between mb-3 px-1">
             <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-serif">Leaderboard</p>
