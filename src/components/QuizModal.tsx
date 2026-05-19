@@ -355,7 +355,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                       const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
                       if (!text) return null;
                       const answered = !!selectedAnswer;
-                      const isCorrectOpt = question.correct_answer.toLowerCase().trim() === opt.toLowerCase();
+                      const ca = question.correct_answer.toLowerCase().trim();
+                      const isCorrectOpt = ca === opt.toLowerCase() || ca === (text ?? '').toLowerCase().trim();
                       const isSelected = selectedAnswer === opt;
                       let stateClass = 'border-border/60 hover:border-accent/60 hover:bg-accent/5';
                       if (answered && isCorrectOpt) {
