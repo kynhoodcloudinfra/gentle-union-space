@@ -135,9 +135,16 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     const dayNumber = question.day_number;
 
     const timeTaken = (Date.now() - startTime) / 1000;
-    // MCQ: case-insensitive (just A/B/C/D). Text: strict — case + space sensitive.
+    // MCQ: correct_answer can be either a letter (A/B/C/D) or the option text. Resolve both.
+    const correctNorm = question.correct_answer.toLowerCase().trim();
+    const mcqOptText = (letter: string) => {
+      const k = `option_${letter.toLowerCase()}` as keyof Question;
+      return ((question[k] as string) ?? '').toLowerCase().trim();
+    };
+    const answerNorm = answer.toLowerCase().trim();
+    const mcqCorrectLetter = ['a','b','c','d'].find(l => mcqOptText(l) === correctNorm) ?? correctNorm;
     const isCorrect = question.question_type === 'mcq'
-      ? answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
+      ? answerNorm === mcqCorrectLetter || mcqOptText(answer) === correctNorm
       : answer === question.correct_answer;
     const score = isCorrect ? (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100) : 0;
 
