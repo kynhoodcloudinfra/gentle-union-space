@@ -68,13 +68,21 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       const { data: liveRows, error: rpcErr } = await supabase.rpc('rotate_active_question');
       if (rpcErr) console.error('rotate error', rpcErr);
 
-      const live = Array.isArray(liveRows) && liveRows.length > 0 ? liveRows[0] : null;
+      let live: any = Array.isArray(liveRows) && liveRows.length > 0 ? liveRows[0] : null;
 
       if (!live) {
         setQuestion(null);
         setLoading(false);
         return;
       }
+
+      // Defensive: always re-fetch full row (including image_url) directly from the table
+      const { data: full } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('id', live.id)
+        .maybeSingle();
+      if (full) live = { ...live, ...full };
 
       // Has the user already answered this specific question?
       const { data: existing } = await supabase

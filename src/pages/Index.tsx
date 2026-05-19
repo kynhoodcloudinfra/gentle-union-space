@@ -163,6 +163,7 @@ export default function Index() {
               <AvatarDisplay
                 avatarId={meAvatarId}
                 imageUrl={meProfileImage}
+                seed={phoneNumber}
                 size={42}
                 className="ring-2 ring-accent/30 group-hover:ring-accent/60 transition-all"
               />
@@ -222,7 +223,7 @@ export default function Index() {
                 <div className="flex-1">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-accent/80 font-serif">Day {dayNumber}</p>
                   <p className="font-serif text-xl text-accent gold-glow">Play Today's Riddle</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">30 seconds · up to 150 points</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">60 seconds · up to 150 points</p>
                 </div>
               </div>
             </button>
@@ -369,6 +370,7 @@ function PodiumPlace({ entry, rank }: { entry: LeaderboardEntry; rank: 1 | 2 | 3
       <AvatarDisplay
         avatarId={entry.avatar_id}
         imageUrl={entry.profile_image_url}
+        seed={entry.phone_number}
         size={avatarSize}
         className={isFirst ? 'ring-2 ring-[hsl(40,55%,55%)] shadow-lg shadow-accent/20' : 'ring-2 ring-accent/30'}
       />
@@ -400,6 +402,7 @@ function LeaderRow({ entry, rank, isUser }: { entry: LeaderboardEntry; rank: num
       <AvatarDisplay
         avatarId={entry.avatar_id}
         imageUrl={entry.profile_image_url}
+        seed={entry.phone_number}
         size={32}
       />
       <div className="flex-1 min-w-0">
