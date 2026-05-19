@@ -109,8 +109,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           score: existing.is_correct ? (time <= 20 ? 150 : time <= 40 ? 125 : 100) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
-          // @ts-ignore — joined relation
-          correctAnswer: existing.questions?.correct_answer ?? '',
+          correctAnswer: live.correct_answer,
+          userAnswer: existing.answer_given ?? '',
+          question: live as Question,
         });
         setLoading(false);
         return;
