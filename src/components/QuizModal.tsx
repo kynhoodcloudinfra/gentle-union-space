@@ -135,9 +135,16 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     const dayNumber = question.day_number;
 
     const timeTaken = (Date.now() - startTime) / 1000;
-    // MCQ: case-insensitive (just A/B/C/D). Text: strict — case + space sensitive.
+    // MCQ: correct_answer can be either a letter (A/B/C/D) or the option text. Resolve both.
+    const correctNorm = question.correct_answer.toLowerCase().trim();
+    const mcqOptText = (letter: string) => {
+      const k = `option_${letter.toLowerCase()}` as keyof Question;
+      return ((question[k] as string) ?? '').toLowerCase().trim();
+    };
+    const answerNorm = answer.toLowerCase().trim();
+    const mcqCorrectLetter = ['a','b','c','d'].find(l => mcqOptText(l) === correctNorm) ?? correctNorm;
     const isCorrect = question.question_type === 'mcq'
-      ? answer.toLowerCase().trim() === question.correct_answer.toLowerCase().trim()
+      ? answerNorm === mcqCorrectLetter || mcqOptText(answer) === correctNorm
       : answer === question.correct_answer;
     const score = isCorrect ? (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100) : 0;
 
@@ -253,12 +260,20 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                 const k = `option_${letter.toLowerCase()}` as keyof Question;
                 return (q[k] as string) ?? '';
               };
+              const correctNormR = (result.correctAnswer ?? '').toLowerCase().trim();
+              const correctLetter = isMcq
+                ? (['A','B','C','D'].find(l => optText(l).toLowerCase().trim() === correctNormR) ?? '')
+                : '';
               const fmt = (ans: string) => {
                 if (!ans) return '—';
                 if (ans === '(timed out)') return '(timed out)';
                 if (isMcq) {
+                  // ans may be a letter (user) or option text (correct_answer stored as text)
                   const L = ans.toUpperCase().trim();
-                  return optText(L) ? `${L}. ${optText(L)}` : ans;
+                  if (['A','B','C','D'].includes(L) && optText(L)) return `${L}. ${optText(L)}`;
+                  const matched = ['A','B','C','D'].find(l => optText(l).toLowerCase().trim() === ans.toLowerCase().trim());
+                  if (matched) return `${matched}. ${optText(matched)}`;
+                  return ans;
                 }
                 return ans;
               };
@@ -340,7 +355,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                       const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
                       if (!text) return null;
                       const answered = !!selectedAnswer;
-                      const isCorrectOpt = question.correct_answer.toLowerCase().trim() === opt.toLowerCase();
+                      const ca = question.correct_answer.toLowerCase().trim();
+                      const isCorrectOpt = ca === opt.toLowerCase() || ca === (text ?? '').toLowerCase().trim();
                       const isSelected = selectedAnswer === opt;
                       let stateClass = 'border-border/60 hover:border-accent/60 hover:bg-accent/5';
                       if (answered && isCorrectOpt) {
