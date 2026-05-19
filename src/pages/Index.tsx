@@ -140,8 +140,9 @@ export default function Index() {
   if (isCommunityMember === false) return <CommunityGatePopup />;
 
   const visible = showAll ? data : data.slice(0, 10);
-  const podium = data.slice(0, 3);
-  const rest = visible.slice(3);
+  const hasPodium = data.length >= 3;
+  const podium = hasPodium ? data.slice(0, 3) : [];
+  const rest = hasPodium ? visible.slice(3) : visible;
   const meInVisible = me && visible.some(e => e.phone_number === me.phone_number);
 
   return (
