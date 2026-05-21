@@ -48,7 +48,7 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
   if (!form) return null;
 
   // Lock editing once a question has gone live (or is currently live)
-  const isLocked = !!form.has_been_live;
+  const isLocked = !!form.has_been_live && !form.is_active;
 
   async function save() {
     if (!form) return;
