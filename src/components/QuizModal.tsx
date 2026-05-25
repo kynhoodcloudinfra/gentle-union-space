@@ -1,5 +1,39 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@/contexts/UserContext';
+
+// Levenshtein distance for fuzzy matching text answers
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
+  for (let j = 1; j <= b.length; j++) {
+    let prev = dp[0];
+    dp[0] = j;
+    for (let i = 1; i <= a.length; i++) {
+      const tmp = dp[i];
+      dp[i] = a[i - 1] === b[j - 1] ? prev : Math.min(prev, dp[i], dp[i - 1]) + 1;
+      prev = tmp;
+    }
+  }
+  return dp[a.length];
+}
+
+function normalizeText(s: string): string {
+  return s.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\p{L}\p{N} ]/gu, '');
+}
+
+function fuzzyMatch(user: string, correct: string): boolean {
+  const u = normalizeText(user);
+  const c = normalizeText(correct);
+  if (!u || !c) return false;
+  if (u === c) return true;
+  const dist = levenshtein(u, c);
+  // Allow ~20% typos, minimum 1, max 3
+  const tolerance = Math.min(3, Math.max(1, Math.floor(c.length * 0.2)));
+  return dist <= tolerance;
+}
+
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
@@ -103,10 +137,13 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           .limit(1)
           .maybeSingle();
 
-        const time = existing.time_taken_seconds ?? 60;
+        const time = existing.time_taken_seconds ?? 30;
+        const isMcqQ = live.question_type === 'mcq';
+        const mcqScore = time <= 10 ? 150 : time <= 20 ? 100 : 50;
+        const textScore = time <= 20 ? 150 : time <= 40 ? 125 : 100;
         setResult({
           isCorrect: existing.is_correct,
-          score: existing.is_correct ? (time <= 20 ? 150 : time <= 40 ? 125 : 100) : 0,
+          score: existing.is_correct ? (isMcqQ ? mcqScore : textScore) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
           correctAnswer: live.correct_answer,
@@ -143,10 +180,15 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     };
     const answerNorm = answer.toLowerCase().trim();
     const mcqCorrectLetter = ['a','b','c','d'].find(l => mcqOptText(l) === correctNorm) ?? correctNorm;
-    const isCorrect = question.question_type === 'mcq'
+    const isMcq = question.question_type === 'mcq';
+    const isCorrect = isMcq
       ? answerNorm === mcqCorrectLetter || mcqOptText(answer) === correctNorm
-      : answer === question.correct_answer;
-    const score = isCorrect ? (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100) : 0;
+      : answer !== '(timed out)' && fuzzyMatch(answer, question.correct_answer);
+    const score = isCorrect
+      ? (isMcq
+          ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 100 : 50)
+          : (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100))
+      : 0;
 
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
@@ -334,7 +376,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer key={question.id} duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer key={question.id} duration={question.question_type === 'mcq' ? 30 : 60} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-3">
                 {question.image_url && (
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
@@ -384,12 +426,12 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     <Input
                       value={textAnswer}
                       onChange={e => setTextAnswer(e.target.value)}
-                      placeholder="Type your answer (case & spaces matter)…"
+                      placeholder="Type your answer…"
                       className="bg-background"
                       onKeyDown={e => { if (e.key === 'Enter' && textAnswer.length > 0) submitAnswer(textAnswer); }}
                     />
                     <p className="text-[10px] text-muted-foreground">
-                      Answers are checked exactly — capitalization and spaces must match.
+                      Case-insensitive — minor typos are accepted.
                     </p>
                     <Button
                       onClick={() => submitAnswer(textAnswer)}
