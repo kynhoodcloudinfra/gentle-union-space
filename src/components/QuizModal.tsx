@@ -1,5 +1,39 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@/contexts/UserContext';
+
+// Levenshtein distance for fuzzy matching text answers
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
+  for (let j = 1; j <= b.length; j++) {
+    let prev = dp[0];
+    dp[0] = j;
+    for (let i = 1; i <= a.length; i++) {
+      const tmp = dp[i];
+      dp[i] = a[i - 1] === b[j - 1] ? prev : Math.min(prev, dp[i], dp[i - 1]) + 1;
+      prev = tmp;
+    }
+  }
+  return dp[a.length];
+}
+
+function normalizeText(s: string): string {
+  return s.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\p{L}\p{N} ]/gu, '');
+}
+
+function fuzzyMatch(user: string, correct: string): boolean {
+  const u = normalizeText(user);
+  const c = normalizeText(correct);
+  if (!u || !c) return false;
+  if (u === c) return true;
+  const dist = levenshtein(u, c);
+  // Allow ~20% typos, minimum 1, max 3
+  const tolerance = Math.min(3, Math.max(1, Math.floor(c.length * 0.2)));
+  return dist <= tolerance;
+}
+
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
