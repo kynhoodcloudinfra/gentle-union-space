@@ -376,7 +376,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer key={question.id} duration={60} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer key={question.id} duration={question.question_type === 'mcq' ? 30 : 60} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-3">
                 {question.image_url && (
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
