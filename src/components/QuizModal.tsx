@@ -103,10 +103,13 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           .limit(1)
           .maybeSingle();
 
-        const time = existing.time_taken_seconds ?? 60;
+        const time = existing.time_taken_seconds ?? 30;
+        const isMcqQ = live.question_type === 'mcq';
+        const mcqScore = time <= 10 ? 150 : time <= 20 ? 100 : 50;
+        const textScore = time <= 20 ? 150 : time <= 40 ? 125 : 100;
         setResult({
           isCorrect: existing.is_correct,
-          score: existing.is_correct ? (time <= 20 ? 150 : time <= 40 ? 125 : 100) : 0,
+          score: existing.is_correct ? (isMcqQ ? mcqScore : textScore) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
           correctAnswer: live.correct_answer,
