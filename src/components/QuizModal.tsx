@@ -146,10 +146,15 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     };
     const answerNorm = answer.toLowerCase().trim();
     const mcqCorrectLetter = ['a','b','c','d'].find(l => mcqOptText(l) === correctNorm) ?? correctNorm;
-    const isCorrect = question.question_type === 'mcq'
+    const isMcq = question.question_type === 'mcq';
+    const isCorrect = isMcq
       ? answerNorm === mcqCorrectLetter || mcqOptText(answer) === correctNorm
-      : answer === question.correct_answer;
-    const score = isCorrect ? (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100) : 0;
+      : answer !== '(timed out)' && fuzzyMatch(answer, question.correct_answer);
+    const score = isCorrect
+      ? (isMcq
+          ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 100 : 50)
+          : (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100))
+      : 0;
 
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
