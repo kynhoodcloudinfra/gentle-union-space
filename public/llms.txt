@@ -1,0 +1,9 @@
+# Raaja Riddle
+
+> Daily Illayaraja music trivia for fans. A new riddle every day, points based on speed, and a leaderboard to climb.
+
+Raaja Riddle is a fan-club quiz app celebrating the music of legendary Indian composer Ilaiyaraaja. Players solve a daily music riddle, earn points based on how fast they answer, build streaks, and compete on a public leaderboard.
+
+## Pages
+
+- [Home & Leaderboard](/): Today's riddle, the all-time and monthly leaderboard, player streaks, and points.
