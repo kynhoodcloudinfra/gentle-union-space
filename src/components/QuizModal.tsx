@@ -382,7 +382,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
                     <img
                       src={question.image_url}
-                      alt="Riddle illustration"
+                      alt="Illayaraja music riddle illustration"
                       className="h-auto max-h-[180px] w-auto max-w-full object-contain sm:max-h-[220px]"
                     />
                   </div>
