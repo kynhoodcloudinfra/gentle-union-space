@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useUser } from '@/contexts/UserContext';
 
 import { CommunityGatePopup } from '@/components/CommunityGatePopup';
@@ -147,6 +148,14 @@ export default function Index() {
 
   return (
     <TooltipProvider delayDuration={150}>
+      <Helmet>
+        <title>Raaja Riddle — Daily Illayaraja Trivia</title>
+        <meta name="description" content="Daily Illayaraja music trivia for fans. Solve a new riddle each day, build streaks, and climb the leaderboard." />
+        <link rel="canonical" href="https://how-to-name-it.kynhood.com/" />
+        <meta property="og:title" content="Raaja Riddle — Daily Illayaraja Trivia" />
+        <meta property="og:description" content="Daily Illayaraja music trivia for fans. Solve a new riddle each day, build streaks, and climb the leaderboard." />
+        <meta property="og:url" content="https://how-to-name-it.kynhood.com/" />
+      </Helmet>
       <div className="min-h-screen bg-background film-grain pb-12">
         {/* Decorative music notes */}
         <Music size={28} className="fixed top-6 left-4 text-accent/15 animate-pulse pointer-events-none" />
@@ -193,7 +202,7 @@ export default function Index() {
             <p className="text-[10px] tracking-[0.35em] uppercase text-muted-foreground font-serif">
               ✦ Hall of Maestros ✦
             </p>
-            <h1 className="font-serif text-3xl text-accent gold-glow mt-1">Raaja Riddle</h1>
+            <h1 className="font-serif text-3xl text-accent gold-glow mt-1">Raaja Riddle — Daily Illayaraja Trivia</h1>
           </div>
 
           {/* Play CTA — prominent */}

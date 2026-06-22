@@ -329,7 +329,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                   <div className="text-left bg-background/40 border border-border/60 rounded-lg p-3 mb-3 space-y-2">
                     {q.image_url && (
                       <div className="flex max-h-[120px] w-full items-center justify-center overflow-hidden rounded-md border border-border/60 bg-secondary/30">
-                        <img src={q.image_url} alt="Riddle" className="h-auto max-h-[120px] w-auto max-w-full object-contain" />
+                        <img src={q.image_url} alt="Illayaraja music riddle illustration" className="h-auto max-h-[120px] w-auto max-w-full object-contain" />
                       </div>
                     )}
                     <p className="font-serif text-sm text-foreground leading-snug">{q.question_text}</p>
@@ -382,7 +382,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
                     <img
                       src={question.image_url}
-                      alt="Riddle illustration"
+                      alt="Illayaraja music riddle illustration"
                       className="h-auto max-h-[180px] w-auto max-w-full object-contain sm:max-h-[220px]"
                     />
                   </div>

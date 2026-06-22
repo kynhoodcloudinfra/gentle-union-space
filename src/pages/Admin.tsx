@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
@@ -28,9 +29,22 @@ export default function Admin() {
     }
   };
 
+  const adminHelmet = (
+    <Helmet>
+      <title>Admin Panel — Raaja Riddle</title>
+      <meta name="description" content="Internal admin panel for managing Raaja Riddle daily questions and leaderboard." />
+      <meta name="robots" content="noindex,nofollow" />
+      <link rel="canonical" href="https://how-to-name-it.kynhood.com/admin" />
+      <meta property="og:title" content="Admin Panel — Raaja Riddle" />
+      <meta property="og:description" content="Internal admin panel for managing Raaja Riddle." />
+      <meta property="og:url" content="https://how-to-name-it.kynhood.com/admin" />
+    </Helmet>
+  );
+
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 film-grain">
+        {adminHelmet}
         <div className="bg-card border border-border rounded-xl p-8 w-full max-w-sm vignette">
           <h1 className="font-serif text-2xl text-accent gold-glow text-center mb-1">Admin Access</h1>
           <p className="text-xs text-muted-foreground text-center mb-4">Raaja Riddle</p>
@@ -56,6 +70,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background p-4 film-grain">
+      {adminHelmet}
       <div className="max-w-3xl mx-auto">
         <div className="text-center pt-3">
           <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">✦ Raaja Riddle ✦</p>
