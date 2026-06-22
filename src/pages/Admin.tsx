@@ -70,6 +70,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background p-4 film-grain">
+      {adminHelmet}
       <div className="max-w-3xl mx-auto">
         <div className="text-center pt-3">
           <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">✦ Raaja Riddle ✦</p>
