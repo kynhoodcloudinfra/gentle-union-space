@@ -33,7 +33,7 @@ export function AvatarDisplay({ avatarId, imageUrl, size = 40, className = '', s
       style={{ width: size, height: size }}
     >
       {url ? (
-        <img src={url} alt="Avatar" className="w-full h-full object-cover" />
+        <img src={url} alt="Player avatar" className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">?</div>
       )}
