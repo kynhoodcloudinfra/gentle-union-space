@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useUser } from '@/contexts/UserContext';
 
 import { CommunityGatePopup } from '@/components/CommunityGatePopup';
