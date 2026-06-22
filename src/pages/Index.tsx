@@ -202,7 +202,7 @@ export default function Index() {
             <p className="text-[10px] tracking-[0.35em] uppercase text-muted-foreground font-serif">
               ✦ Hall of Maestros ✦
             </p>
-            <h1 className="font-serif text-3xl text-accent gold-glow mt-1">Raaja Riddle</h1>
+            <h1 className="font-serif text-3xl text-accent gold-glow mt-1">Raaja Riddle — Daily Illayaraja Trivia</h1>
           </div>
 
           {/* Play CTA — prominent */}
