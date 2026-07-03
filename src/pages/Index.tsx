@@ -232,7 +232,7 @@ export default function Index() {
                 </div>
                 <div className="flex-1">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-accent/80 font-serif">{"\n"}</p>
-                  <p className="font-serif text-xl text-accent gold-glow">Play Today's Riddle</p>
+                  <p className="font-serif text-xl text-accent gold-glow">Play Today's Puzzle</p>
                   <p className="text-xs text-muted-foreground mt-0.5">60 seconds · up to 150 points</p>
                 </div>
               </div>
