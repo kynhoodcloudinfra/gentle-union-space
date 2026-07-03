@@ -288,7 +288,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       <DialogContent className="max-w-sm bg-card border-border film-grain p-4 gap-0 max-h-[90vh] overflow-y-auto themed-scroll">
         <div>
           <div className="text-center mb-2">
-            <h2 className="font-serif text-xl text-accent gold-glow tracking-wide">Today's Riddle</h2>
+            <h2 className="font-serif text-xl text-accent gold-glow tracking-wide">Today's Puzzle</h2>
             <OrnamentalDivider className="my-1.5" />
           </div>
 
@@ -370,7 +370,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             })()
           ) : !question ? (
             <div className="text-center py-8">
-              <h3 className="font-serif text-xl text-accent mb-2">No Riddle Available</h3>
+              <h3 className="font-serif text-xl text-accent mb-2">No Puzzle Available</h3>
               <p className="text-muted-foreground text-sm mb-4">All questions have been played. Check back soon!</p>
               <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
             </div>
