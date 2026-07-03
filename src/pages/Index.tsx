@@ -149,11 +149,11 @@ export default function Index() {
   return (
     <TooltipProvider delayDuration={150}>
       <Helmet>
-        <title>Raaja Riddle — Daily Illayaraja Trivia</title>
-        <meta name="description" content="Daily Illayaraja music trivia for fans. Solve a new riddle each day, build streaks, and climb the leaderboard." />
+        <title>Paattu Puzzle</title>
+        <meta name="description" content="Daily music trivia for fans. Solve a new riddle each day, build streaks, and climb the leaderboard." />
         <link rel="canonical" href="https://how-to-name-it.kynhood.com/" />
-        <meta property="og:title" content="Raaja Riddle — Daily Illayaraja Trivia" />
-        <meta property="og:description" content="Daily Illayaraja music trivia for fans. Solve a new riddle each day, build streaks, and climb the leaderboard." />
+        <meta property="og:title" content="Paattu Puzzle" />
+        <meta property="og:description" content="Daily music trivia for fans. Solve a new riddle each day, build streaks, and climb the leaderboard." />
         <meta property="og:url" content="https://how-to-name-it.kynhood.com/" />
       </Helmet>
       <div className="min-h-screen bg-background film-grain pb-12">
@@ -200,9 +200,9 @@ export default function Index() {
           {/* Title */}
           <div className="text-center mb-4">
             <p className="text-[10px] tracking-[0.35em] uppercase text-muted-foreground font-serif">
-              ✦ Hall of Maestros ✦
+              ✦ HALL OF MUSIC ✦
             </p>
-            <h1 className="font-serif text-3xl text-accent gold-glow mt-1">Raaja Riddle — Daily Illayaraja Trivia</h1>
+            <h1 className="font-serif text-3xl text-accent gold-glow mt-1">Paattu Puzzle</h1>
           </div>
 
           {/* Play CTA — prominent */}
@@ -326,7 +326,7 @@ export default function Index() {
 
           <div className="mt-8 flex flex-col items-center gap-1">
             <p className="text-muted-foreground/40 text-[10px] font-serif italic text-center">
-              ♪ Raaja Riddle — An Ilaiyaraaja Tribute ♪
+              ♪ a PAATUKKARAN initiative ♪
             </p>
           </div>
         </div>
