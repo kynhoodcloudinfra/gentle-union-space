@@ -370,7 +370,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             })()
           ) : !question ? (
             <div className="text-center py-8">
-              <h3 className="font-serif text-xl text-accent mb-2">No Riddle Available</h3>
+              <h3 className="font-serif text-xl text-accent mb-2">No Puzzle Available</h3>
               <p className="text-muted-foreground text-sm mb-4">All questions have been played. Check back soon!</p>
               <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
             </div>
