@@ -209,7 +209,7 @@ export default function Index() {
           {playedToday ? (
             <div className="bg-gradient-to-br from-[hsl(0,45%,22%)] to-[hsl(0,55%,15%)] border border-accent/30 rounded-2xl p-4 mb-6 film-grain text-center">
               <Check size={28} className="mx-auto text-accent mb-1" />
-              <p className="font-serif text-base text-accent">Today's Riddle Done</p>
+              <p className="font-serif text-base text-accent">Today's Puzzle Done</p>
               <p className="text-xs text-muted-foreground mt-0.5">Come back tomorrow for the next one.</p>
               <Button
                 onClick={() => setQuizOpen(true)}
