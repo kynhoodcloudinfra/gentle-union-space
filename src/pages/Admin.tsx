@@ -6,6 +6,7 @@ import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionsTab } from '@/components/admin/QuestionsTab';
 import { LeaderboardTab } from '@/components/admin/LeaderboardTab';
+import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 
 const ADMIN_PASSWORD = 'rajaadmin123';
 
@@ -79,12 +80,15 @@ export default function Admin() {
         <OrnamentalDivider />
 
         <Tabs defaultValue="questions" className="mt-4">
-          <TabsList className="grid w-full grid-cols-2 bg-card border border-border">
+          <TabsList className="grid w-full grid-cols-3 bg-card border border-border">
             <TabsTrigger value="questions" className="font-serif data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
               Questions
             </TabsTrigger>
             <TabsTrigger value="leaderboard" className="font-serif data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
               Leaderboard
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="font-serif data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
+              Analytics
             </TabsTrigger>
           </TabsList>
           <TabsContent value="questions" className="mt-4">
@@ -92,6 +96,9 @@ export default function Admin() {
           </TabsContent>
           <TabsContent value="leaderboard" className="mt-4">
             <LeaderboardTab />
+          </TabsContent>
+          <TabsContent value="analytics" className="mt-4">
+            <AnalyticsTab />
           </TabsContent>
         </Tabs>
       </div>
