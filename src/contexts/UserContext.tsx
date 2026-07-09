@@ -211,6 +211,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         kyn_username: handle,
         total_score: 0,
         streak: 0,
+        month: getCurrentMonth(),
       });
     }
   }, [user, persistProfileField, kynUsername]);
@@ -248,6 +249,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         kyn_username: username,
         total_score: 0,
         streak: 0,
+        month: getCurrentMonth(),
       });
     }
     return { ok: true };
