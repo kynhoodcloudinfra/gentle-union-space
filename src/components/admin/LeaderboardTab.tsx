@@ -21,10 +21,18 @@ export function LeaderboardTab() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('leaderboard')
-        .select('phone_number, name, display_name, kyn_username, total_score, streak, avatar_id, profile_image_url');
-      if (data) {
+      const pageSize = 1000;
+      const data: Row[] = [];
+      for (let page = 0; page < 20; page++) {
+        const { data: batch, error } = await supabase
+          .from('leaderboard')
+          .select('phone_number, name, display_name, kyn_username, total_score, streak, avatar_id, profile_image_url')
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (error || !batch || batch.length === 0) break;
+        data.push(...(batch as Row[]));
+        if (batch.length < pageSize) break;
+      }
+      if (data.length) {
         const agg: Record<string, Row> = {};
         data.forEach(e => {
           if (!agg[e.phone_number]) agg[e.phone_number] = { ...e, total_score: 0, streak: 0 };

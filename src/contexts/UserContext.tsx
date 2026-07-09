@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { decodeToken, checkCommunityMembership, KynUser } from '@/lib/kynAuth';
-import { supabase } from '@/lib/supabase';
+import { supabase, getCurrentMonth } from '@/lib/supabase';
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated' | 'checking_membership';
 
@@ -211,6 +211,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         kyn_username: handle,
         total_score: 0,
         streak: 0,
+        month: getCurrentMonth(),
       });
     }
   }, [user, persistProfileField, kynUsername]);
@@ -248,6 +249,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         kyn_username: username,
         total_score: 0,
         streak: 0,
+        month: getCurrentMonth(),
       });
     }
     return { ok: true };

@@ -42,9 +42,18 @@ export default function Index() {
 
   async function loadData() {
     setLoading(true);
-    const { data: rows } = await supabase
-      .from('leaderboard')
-      .select('phone_number, name, display_name, kyn_username, total_score, streak, avatar_id, profile_image_url');
+    // Paginate — PostgREST caps at 1000 rows/request. Loop until fewer than pageSize returned.
+    const pageSize = 1000;
+    const rows: any[] = [];
+    for (let page = 0; page < 20; page++) {
+      const { data: batch, error } = await supabase
+        .from('leaderboard')
+        .select('phone_number, name, display_name, kyn_username, total_score, streak, avatar_id, profile_image_url')
+        .range(page * pageSize, page * pageSize + pageSize - 1);
+      if (error || !batch || batch.length === 0) break;
+      rows.push(...batch);
+      if (batch.length < pageSize) break;
+    }
 
     if (rows) {
       const agg: Record<string, LeaderboardEntry> = {};
