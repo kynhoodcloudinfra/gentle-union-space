@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { decodeToken, checkCommunityMembership, KynUser } from '@/lib/kynAuth';
-import { supabase } from '@/lib/supabase';
+import { supabase, getCurrentMonth } from '@/lib/supabase';
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated' | 'checking_membership';
 
