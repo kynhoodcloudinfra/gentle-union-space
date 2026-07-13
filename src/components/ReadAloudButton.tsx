@@ -43,7 +43,8 @@ export function ReadAloudButton({ text, cacheKey, className = '' }: ReadAloudBut
   }, [cacheKey]);
 
   async function fetchAudioUrl(): Promise<string> {
-    const cached = audioCache.get(cacheKey);
+    const versionedKey = `${AUDIO_VERSION}:${cacheKey}`;
+    const cached = audioCache.get(versionedKey);
     if (cached) return cached;
 
     const speed = computeSpeed(text);
