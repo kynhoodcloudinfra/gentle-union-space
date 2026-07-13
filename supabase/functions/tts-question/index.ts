@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const clampedSpeed = Math.max(0.9, Math.min(1.6, Number(speed) || 1.0));
+    const clampedSpeed = Math.max(1.0, Math.min(1.35, Number(speed) || 1.05));
 
     const upstream = await fetch('https://ai.gateway.lovable.dev/v1/audio/speech', {
       method: 'POST',
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
         response_format: 'mp3',
         speed: clampedSpeed,
         instructions:
-          'Speak in a clear, warm Indian English accent at a natural conversational pace. Pronounce Tamil / Indian names crisply.',
+          'Speak in a clear Indian English accent at a normal, brisk conversational pace — like a friendly quiz host. Do not slow down or over-enunciate. Keep energy up and pronounce Tamil / Indian names crisply.',
       }),
     });
 
