@@ -334,6 +334,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                       </div>
                     )}
                     <p className="font-serif text-sm text-foreground leading-snug">{q.question_text}</p>
+                    <div className="flex justify-start">
+                      <ReadAloudButton text={q.question_text} cacheKey={`recap-${q.id}`} />
+                    </div>
                     <div className="pt-1 border-t border-border/40 space-y-1.5 text-xs">
                       <div className="flex gap-2">
                         <span className="text-muted-foreground shrink-0 w-24">Correct answer</span>
