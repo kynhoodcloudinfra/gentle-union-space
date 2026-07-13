@@ -171,8 +171,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       }
 
       setQuestion(live as Question);
-      setTimerRunning(true);
-      setStartTime(Date.now());
+      setRemainingSeconds(TOTAL_DURATION);
     } catch (err) {
       console.error(err);
     }
