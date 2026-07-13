@@ -37,6 +37,7 @@ function fuzzyMatch(user: string, correct: string): boolean {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
+import { ReadAloudButton } from './ReadAloudButton';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { supabase, getCurrentMonth } from '@/lib/supabase';
@@ -139,8 +140,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
         const time = existing.time_taken_seconds ?? 30;
         const isMcqQ = live.question_type === 'mcq';
-        const mcqScore = time <= 10 ? 150 : time <= 20 ? 100 : 50;
-        const textScore = time <= 20 ? 150 : time <= 40 ? 125 : 100;
+        const mcqScore = time <= 15 ? 150 : time <= 30 ? 100 : 50;
+        const textScore = time <= 15 ? 150 : time <= 30 ? 125 : 100;
         setResult({
           isCorrect: existing.is_correct,
           score: existing.is_correct ? (isMcqQ ? mcqScore : textScore) : 0,
@@ -186,8 +187,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       : answer !== '(timed out)' && fuzzyMatch(answer, question.correct_answer);
     const score = isCorrect
       ? (isMcq
-          ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 100 : 50)
-          : (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100))
+          ? (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 100 : 50)
+          : (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 125 : 100))
       : 0;
 
     await supabase.from('submissions').insert({
@@ -333,6 +334,9 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                       </div>
                     )}
                     <p className="font-serif text-sm text-foreground leading-snug">{q.question_text}</p>
+                    <div className="flex justify-start">
+                      <ReadAloudButton text={q.question_text} cacheKey={`recap-${q.id}`} />
+                    </div>
                     <div className="pt-1 border-t border-border/40 space-y-1.5 text-xs">
                       <div className="flex gap-2">
                         <span className="text-muted-foreground shrink-0 w-24">Correct answer</span>
@@ -376,7 +380,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer key={question.id} duration={question.question_type === 'mcq' ? 30 : 60} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer key={question.id} duration={45} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-3">
                 {question.image_url && (
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
@@ -387,9 +391,12 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     />
                   </div>
                 )}
-                <h3 className="font-serif text-base text-foreground leading-snug mb-3 text-center">
+                <h3 className="font-serif text-base text-foreground leading-snug mb-2 text-center">
                   {question.question_text}
                 </h3>
+                <div className="mb-3 flex justify-center">
+                  <ReadAloudButton text={question.question_text} cacheKey={question.id} />
+                </div>
 
                 {question.question_type === 'mcq' ? (
                   <div className="space-y-1.5">
