@@ -68,7 +68,7 @@ export function ReadAloudButton({ text, cacheKey, className = '' }: ReadAloudBut
     const blob = await res.blob();
     const typed = blob.type.startsWith('audio/') ? blob : new Blob([blob], { type: 'audio/mpeg' });
     const url = URL.createObjectURL(typed);
-    audioCache.set(cacheKey, url);
+    audioCache.set(versionedKey, url);
     return url;
   }
 
