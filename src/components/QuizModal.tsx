@@ -181,12 +181,11 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   const submitAnswer = useCallback(async (answer: string) => {
     if (submitting || !question || !phoneNumber || !displayName) return;
     setSubmitting(true);
-    setTimerRunning(false);
 
     const month = question.month || getCurrentMonth();
     const dayNumber = question.day_number;
 
-    const timeTaken = (Date.now() - startTime) / 1000;
+    const timeTaken = Math.max(0, TOTAL_DURATION - remainingSeconds);
     // MCQ: correct_answer can be either a letter (A/B/C/D) or the option text. Resolve both.
     const correctNorm = question.correct_answer.toLowerCase().trim();
     const mcqOptText = (letter: string) => {
