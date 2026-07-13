@@ -297,6 +297,13 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     submitAnswer('(timed out)');
   }, [submitAnswer]);
 
+  // Auto-submit as timed out when countdown hits zero (only while modal is open + visible).
+  useEffect(() => {
+    if (open && tabVisible && question && !result && !submitting && remainingSeconds <= 0) {
+      handleTimeout();
+    }
+  }, [open, tabVisible, question, result, submitting, remainingSeconds, handleTimeout]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm bg-card border-border film-grain p-4 gap-0 max-h-[90vh] overflow-y-auto themed-scroll">
