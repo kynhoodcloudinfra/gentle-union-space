@@ -187,8 +187,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       : answer !== '(timed out)' && fuzzyMatch(answer, question.correct_answer);
     const score = isCorrect
       ? (isMcq
-          ? (timeTaken <= 10 ? 150 : timeTaken <= 20 ? 100 : 50)
-          : (timeTaken <= 20 ? 150 : timeTaken <= 40 ? 125 : 100))
+          ? (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 100 : 50)
+          : (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 125 : 100))
       : 0;
 
     await supabase.from('submissions').insert({
