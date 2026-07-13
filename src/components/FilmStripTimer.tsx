@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface FilmStripTimerProps {
   duration: number;
@@ -9,16 +9,10 @@ interface FilmStripTimerProps {
 
 export function FilmStripTimer({ duration, onExpire, isRunning, onTick }: FilmStripTimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration);
-  const lastDurationRef = useRef(duration);
 
-  // Only snap to `duration` when the parent explicitly resets it
-  // (e.g. new question via `key` remount). Ignore incidental prop churn.
-  useEffect(() => {
-    if (duration !== lastDurationRef.current) {
-      lastDurationRef.current = duration;
-      setTimeLeft(duration);
-    }
-  }, [duration]);
+  // Reset only when the timer is remounted with a new `duration`
+  // (parent uses key={question.id} so this happens per question).
+  useEffect(() => { setTimeLeft(duration); }, [duration]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -31,22 +25,18 @@ export function FilmStripTimer({ duration, onExpire, isRunning, onTick }: FilmSt
     return () => clearTimeout(t);
   }, [timeLeft, isRunning, onExpire, onTick]);
 
-  const total = lastDurationRef.current || duration || 1;
-  const pct = Math.max(0, Math.min(100, (timeLeft / total) * 100));
+  const pct = Math.max(0, Math.min(100, (timeLeft / duration) * 100));
   const urgent = timeLeft <= 5;
 
   return (
     <div className="w-full">
-      {/* Film strip container */}
       <div className="relative bg-card border border-border rounded-lg overflow-hidden">
-        {/* Sprocket holes top */}
         <div className="flex justify-between px-2 py-1">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="w-2 h-2 rounded-sm bg-background opacity-60" />
           ))}
         </div>
-        
-        {/* Timer bar */}
+
         <div className="px-3 py-2">
           <div className="h-6 bg-background rounded-sm overflow-hidden relative">
             <div
@@ -59,7 +49,6 @@ export function FilmStripTimer({ duration, onExpire, isRunning, onTick }: FilmSt
           </div>
         </div>
 
-        {/* Sprocket holes bottom */}
         <div className="flex justify-between px-2 py-1">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="w-2 h-2 rounded-sm bg-background opacity-60" />
