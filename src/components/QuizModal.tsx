@@ -37,6 +37,7 @@ function fuzzyMatch(user: string, correct: string): boolean {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
+import { ReadAloudButton } from './ReadAloudButton';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { supabase, getCurrentMonth } from '@/lib/supabase';
