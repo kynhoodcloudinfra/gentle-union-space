@@ -377,7 +377,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer key={question.id} duration={question.question_type === 'mcq' ? 30 : 60} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer key={question.id} duration={45} onExpire={handleTimeout} isRunning={timerRunning} />
               <div className="mt-3">
                 {question.image_url && (
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
@@ -388,9 +388,12 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     />
                   </div>
                 )}
-                <h3 className="font-serif text-base text-foreground leading-snug mb-3 text-center">
+                <h3 className="font-serif text-base text-foreground leading-snug mb-2 text-center">
                   {question.question_text}
                 </h3>
+                <div className="mb-3 flex justify-center">
+                  <ReadAloudButton text={question.question_text} cacheKey={question.id} />
+                </div>
 
                 {question.question_type === 'mcq' ? (
                   <div className="space-y-1.5">
