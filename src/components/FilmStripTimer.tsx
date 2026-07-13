@@ -1,30 +1,9 @@
-import { useEffect, useState } from 'react';
-
 interface FilmStripTimerProps {
   duration: number;
-  onExpire: () => void;
-  isRunning: boolean;
-  onTick?: (secondsLeft: number) => void;
+  timeLeft: number;
 }
 
-export function FilmStripTimer({ duration, onExpire, isRunning, onTick }: FilmStripTimerProps) {
-  const [timeLeft, setTimeLeft] = useState(duration);
-
-  // Reset only when the timer is remounted with a new `duration`
-  // (parent uses key={question.id} so this happens per question).
-  useEffect(() => { setTimeLeft(duration); }, [duration]);
-
-  useEffect(() => {
-    if (!isRunning) return;
-    if (timeLeft <= 0) { onExpire(); return; }
-    const t = setTimeout(() => {
-      const next = timeLeft - 1;
-      setTimeLeft(next);
-      onTick?.(next);
-    }, 1000);
-    return () => clearTimeout(t);
-  }, [timeLeft, isRunning, onExpire, onTick]);
-
+export function FilmStripTimer({ duration, timeLeft }: FilmStripTimerProps) {
   const pct = Math.max(0, Math.min(100, (timeLeft / duration) * 100));
   const urgent = timeLeft <= 5;
 
