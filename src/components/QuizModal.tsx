@@ -291,7 +291,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
     setSubmitting(false);
     onSubmitted?.();
-  }, [submitting, question, phoneNumber, displayName, kynUsername, startTime, onSubmitted]);
+  }, [submitting, question, phoneNumber, displayName, kynUsername, remainingSeconds, onSubmitted]);
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
