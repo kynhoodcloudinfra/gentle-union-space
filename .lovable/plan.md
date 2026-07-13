@@ -1,37 +1,38 @@
-## Changes
+## 1. Fix "Read aloud" — `NotSupportedError: no supported source`
 
-### 1. Timer: 45s for all questions (MCQ + text)
-In `src/components/QuizModal.tsx`, replace `duration={question.question_type === 'mcq' ? 30 : 60}` with a flat `duration={45}`.
+**Root cause:** `supabase.functions.invoke` inspects the response `Content-Type`; for `audio/mpeg` the current SDK returns the payload as **text/JSON-decoded**, so wrapping it in `new Blob([data], { type: 'audio/mpeg' })` produces bytes that are no longer a valid MP3 → `<audio>` throws `NotSupportedError`. The edge function itself returns valid MP3 (confirmed via curl).
 
-Rescale score tiers so both types fit the 45s window and apply them both in `submitAnswer()` and in the "already answered" recap in `loadQuestion()`:
-- **MCQ**: `≤15s → 150`, `≤30s → 100`, else `50`
-- **Text**: `≤15s → 150`, `≤30s → 125`, else `100`
+**Fix in `src/components/ReadAloudButton.tsx`:** stop using `supabase.functions.invoke` for this binary endpoint. Call the function URL directly with `fetch` and read `response.blob()` so the raw MP3 bytes reach `<audio>` intact.
 
-Historical submissions/leaderboard are not re-scored — only future answers use the new tiers.
+- Build URL from `import.meta.env.VITE_SUPABASE_URL` + `/functions/v1/tts-question`.
+- Send `Authorization: Bearer <VITE_SUPABASE_PUBLISHABLE_KEY>` and `apikey` headers.
+- Check `response.ok`; on failure, surface `response.text()` in the toast.
+- Keep the per-question blob-URL cache and idle/loading/playing state machine unchanged.
 
-### 2. "Read aloud" button with Indian-accent TTS
+## 2. Pause timer when the question isn't visible; resume on reopen
 
-Add a visible speaker button next to the question text inside the quiz card (both during answering and in the result recap). Toggles Play / Stop; replays from cache on repeat clicks.
+Applies to **all** question types and every user. The countdown must not tick while the quiz modal is closed or the tab is hidden.
 
-**Provider**: Lovable AI Gateway `openai/gpt-4o-mini-tts` (no extra key needed — uses `LOVABLE_API_KEY`). Voice `alloy`. Indian-accent styling via the `instructions` field: `"Speak in a clear, warm Indian English accent at a natural conversational pace."`
+**Edits in `src/components/QuizModal.tsx`:**
+- Replace the single `startTime` number with a `remainingSeconds` state (initialised to 45 when a fresh question loads).
+- Drive `FilmStripTimer` with `duration={remainingSeconds}` and `isRunning={open && !document.hidden && !result && !!question}`.
+- On every tick from the timer, mirror the current remaining seconds back into state so closing/reopening resumes from that exact value.
+- Compute `time_taken_seconds` submitted to the DB as `45 - remainingSeconds` (rounded to 0.1s) instead of `(Date.now() - startTime)/1000`, so pausing doesn't inflate the elapsed time and the existing score tiers stay accurate.
+- Listen to `document.visibilitychange` and force a re-render so the `isRunning` prop flips when the tab is backgrounded/foregrounded.
 
-**Pacing (≤15s max read)**:
-```
-words = question_text.split(/\s+/).length
-natural_seconds = words / 2.6          // ~2.6 words/sec at speed 1.0
-target_seconds  = clamp(natural_seconds, 6, 15)
-speed           = clamp(natural_seconds / target_seconds, 0.9, 1.6)
-```
-Short questions play near 1.0x; long ones speed up to at most 1.6x so nothing exceeds ~15s.
+**Edits in `src/components/FilmStripTimer.tsx`:**
+- Accept an optional `onTick?: (secondsLeft: number) => void` and call it each second so the parent can persist `remainingSeconds`.
+- Guard the `setTimeout` with `isRunning` (already partly done) and clear the timeout when `isRunning` flips to false so no stray tick fires while paused.
+- Do **not** reset `timeLeft` to `duration` on every `duration` change — only when a *new question id* mounts. The parent already remounts the timer via `key={question.id}`, so keep the reset effect but make it a no-op when the incoming `duration` matches the current `timeLeft` (prevents the reopen from snapping back to 45).
 
-**Architecture**:
-- New Supabase edge function `tts-question` (server-side, keeps the gateway key secret). Accepts `{ text, speed }`, forwards to `https://ai.gateway.lovable.dev/v1/audio/speech` with `model: openai/gpt-4o-mini-tts`, `voice: alloy`, `response_format: mp3`, `stream_format: audio`, plus the Indian-accent `instructions`. Returns raw MP3 bytes with `Content-Type: audio/mpeg` and CORS headers.
-- Client `ReadAloudButton` calls `supabase.functions.invoke('tts-question', { body: { text, speed } })`, wraps the returned blob in `URL.createObjectURL`, and plays it via `new Audio(...)`. Caches the object URL per question id so repeat clicks are instant and don't re-bill.
-- Button states: `idle | loading | playing`. Clicking while playing stops audio; clicking again replays cached URL. Handles 402/429/5xx from the gateway with a toast.
+**How reopen works:** `Index.tsx` opens the modal via the "Today's Puzzle" card; when `open` flips true, `isRunning` becomes true and the timer resumes from the saved `remainingSeconds`. No extra plumbing needed on the Index page.
 
-### 3. Files touched
+**Timeout still fires correctly:** when `remainingSeconds` reaches 0, `FilmStripTimer` calls `onExpire`, which still routes to `submitAnswer('(timed out)')`.
 
-- `src/components/QuizModal.tsx` — timer duration (flat 45), rescaled score tiers, mount `ReadAloudButton` near the question.
-- `src/components/ReadAloudButton.tsx` *(new)* — icon button + audio element + fetch/cache logic.
-- `supabase/functions/tts-question/index.ts` *(new)* — proxy to Lovable AI TTS.
-- `supabase/config.toml` — register the new function (public, no JWT verification — app is auth-less).
+## 3. Files touched
+
+- `src/components/ReadAloudButton.tsx` — swap `supabase.functions.invoke` for direct `fetch` + `response.blob()`.
+- `src/components/QuizModal.tsx` — `remainingSeconds` state, visibility-aware `isRunning`, elapsed-time computed from remaining.
+- `src/components/FilmStripTimer.tsx` — `onTick` callback, only reset on genuine duration change, clear timeout when paused.
+
+No DB, edge function, or scoring-tier changes.
