@@ -80,22 +80,37 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   const [result, setResult] = useState<ResultData | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [textAnswer, setTextAnswer] = useState('');
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [startTime, setStartTime] = useState(0);
+  const TOTAL_DURATION = 45;
+  const [remainingSeconds, setRemainingSeconds] = useState(TOTAL_DURATION);
   const [submitting, setSubmitting] = useState(false);
+  const [tabVisible, setTabVisible] = useState(
+    typeof document === 'undefined' ? true : !document.hidden,
+  );
 
+  // Track tab visibility so the timer pauses when the tab is backgrounded.
+  useEffect(() => {
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  // Load a question only when needed. Do NOT reset state on close — that would
+  // wipe the paused timer. Reopening with the same unanswered question resumes.
   useEffect(() => {
     if (!open || !phoneNumber) return;
+    if (question && !result && remainingSeconds > 0) return; // resume
     loadQuestion();
-    return () => {
-      setQuestion(null);
-      setResult(null);
-      setSelectedAnswer('');
-      setTextAnswer('');
-      setTimerRunning(false);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, phoneNumber]);
+
+  // Countdown driver: only ticks when the modal is open, the tab is visible,
+  // a question is being answered, and we're not mid-submit.
+  const canTick = open && tabVisible && !!question && !result && !submitting && remainingSeconds > 0;
+  useEffect(() => {
+    if (!canTick) return;
+    const t = setTimeout(() => setRemainingSeconds(s => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [canTick, remainingSeconds]);
 
   async function loadQuestion() {
     setLoading(true);
