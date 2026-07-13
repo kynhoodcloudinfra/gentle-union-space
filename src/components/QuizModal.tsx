@@ -80,7 +80,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   const [result, setResult] = useState<ResultData | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [textAnswer, setTextAnswer] = useState('');
-  const TOTAL_DURATION = 45;
+  const TOTAL_DURATION = 75;
   const [remainingSeconds, setRemainingSeconds] = useState(TOTAL_DURATION);
   const [submitting, setSubmitting] = useState(false);
   const [tabVisible, setTabVisible] = useState(
