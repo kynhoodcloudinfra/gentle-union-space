@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, Square, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReadAloudButtonProps {
@@ -11,6 +10,9 @@ interface ReadAloudButtonProps {
 
 // Cache blob URLs across mounts so replays are instant and don't re-bill.
 const audioCache = new Map<string, string>();
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 function computeSpeed(text: string): number {
   const words = text.trim().split(/\s+/).filter(Boolean).length || 1;
@@ -39,15 +41,26 @@ export function ReadAloudButton({ text, cacheKey, className = '' }: ReadAloudBut
     if (cached) return cached;
 
     const speed = computeSpeed(text);
-    const { data, error } = await supabase.functions.invoke('tts-question', {
-      body: { text, speed },
+    // Direct fetch: supabase.functions.invoke can mis-decode audio/mpeg bodies,
+    // corrupting the MP3 bytes. Reading response.blob() preserves them.
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/tts-question`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        apikey: SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ text, speed }),
     });
 
-    if (error) throw error;
+    if (!res.ok) {
+      const msg = await res.text().catch(() => '');
+      throw new Error(msg || `TTS failed (${res.status})`);
+    }
 
-    // supabase.functions.invoke returns the body as a Blob when Content-Type is not JSON.
-    const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: 'audio/mpeg' });
-    const url = URL.createObjectURL(blob);
+    const blob = await res.blob();
+    const typed = blob.type.startsWith('audio/') ? blob : new Blob([blob], { type: 'audio/mpeg' });
+    const url = URL.createObjectURL(typed);
     audioCache.set(cacheKey, url);
     return url;
   }

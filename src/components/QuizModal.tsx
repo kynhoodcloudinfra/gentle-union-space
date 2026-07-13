@@ -80,22 +80,37 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   const [result, setResult] = useState<ResultData | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [textAnswer, setTextAnswer] = useState('');
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [startTime, setStartTime] = useState(0);
+  const TOTAL_DURATION = 45;
+  const [remainingSeconds, setRemainingSeconds] = useState(TOTAL_DURATION);
   const [submitting, setSubmitting] = useState(false);
+  const [tabVisible, setTabVisible] = useState(
+    typeof document === 'undefined' ? true : !document.hidden,
+  );
 
+  // Track tab visibility so the timer pauses when the tab is backgrounded.
+  useEffect(() => {
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+
+  // Load a question only when needed. Do NOT reset state on close — that would
+  // wipe the paused timer. Reopening with the same unanswered question resumes.
   useEffect(() => {
     if (!open || !phoneNumber) return;
+    if (question && !result && remainingSeconds > 0) return; // resume
     loadQuestion();
-    return () => {
-      setQuestion(null);
-      setResult(null);
-      setSelectedAnswer('');
-      setTextAnswer('');
-      setTimerRunning(false);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, phoneNumber]);
+
+  // Countdown driver: only ticks when the modal is open, the tab is visible,
+  // a question is being answered, and we're not mid-submit.
+  const canTick = open && tabVisible && !!question && !result && !submitting && remainingSeconds > 0;
+  useEffect(() => {
+    if (!canTick) return;
+    const t = setTimeout(() => setRemainingSeconds(s => Math.max(0, s - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [canTick, remainingSeconds]);
 
   async function loadQuestion() {
     setLoading(true);
@@ -156,8 +171,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       }
 
       setQuestion(live as Question);
-      setTimerRunning(true);
-      setStartTime(Date.now());
+      setRemainingSeconds(TOTAL_DURATION);
     } catch (err) {
       console.error(err);
     }
@@ -167,12 +181,11 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
   const submitAnswer = useCallback(async (answer: string) => {
     if (submitting || !question || !phoneNumber || !displayName) return;
     setSubmitting(true);
-    setTimerRunning(false);
 
     const month = question.month || getCurrentMonth();
     const dayNumber = question.day_number;
 
-    const timeTaken = (Date.now() - startTime) / 1000;
+    const timeTaken = Math.max(0, TOTAL_DURATION - remainingSeconds);
     // MCQ: correct_answer can be either a letter (A/B/C/D) or the option text. Resolve both.
     const correctNorm = question.correct_answer.toLowerCase().trim();
     const mcqOptText = (letter: string) => {
@@ -278,11 +291,18 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
     setSubmitting(false);
     onSubmitted?.();
-  }, [submitting, question, phoneNumber, displayName, kynUsername, startTime, onSubmitted]);
+  }, [submitting, question, phoneNumber, displayName, kynUsername, remainingSeconds, onSubmitted]);
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
   }, [submitAnswer]);
+
+  // Auto-submit as timed out when countdown hits zero (only while modal is open + visible).
+  useEffect(() => {
+    if (open && tabVisible && question && !result && !submitting && remainingSeconds <= 0) {
+      handleTimeout();
+    }
+  }, [open, tabVisible, question, result, submitting, remainingSeconds, handleTimeout]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -380,7 +400,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
             </div>
           ) : (
             <>
-              <FilmStripTimer key={question.id} duration={45} onExpire={handleTimeout} isRunning={timerRunning} />
+              <FilmStripTimer key={question.id} duration={TOTAL_DURATION} timeLeft={remainingSeconds} />
               <div className="mt-3">
                 {question.image_url && (
                   <div className="mb-3 flex max-h-[180px] min-h-24 w-full items-center justify-center overflow-hidden rounded-md border border-border/70 bg-secondary/30 shadow-sm sm:max-h-[220px]">
