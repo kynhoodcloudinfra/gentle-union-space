@@ -14,12 +14,18 @@ const audioCache = new Map<string, string>();
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
+// Cache-buster: bump when pacing/voice tuning changes so stale slow audio
+// stored under the old key isn't replayed.
+const AUDIO_VERSION = 'v2';
+
 function computeSpeed(text: string): number {
+  // Baseline is normal conversational pace (1.05x). Only speed up for long
+  // questions so nothing exceeds ~15s; never slow down below normal.
   const words = text.trim().split(/\s+/).filter(Boolean).length || 1;
-  const naturalSeconds = words / 2.6; // ~2.6 wps at speed 1.0
-  const targetSeconds = Math.max(6, Math.min(15, naturalSeconds));
-  const speed = naturalSeconds / targetSeconds;
-  return Math.max(0.9, Math.min(1.6, Number(speed.toFixed(2))));
+  const naturalSeconds = words / 2.8; // ~2.8 wps at speed 1.0 (avg English pace)
+  const speedForCap = naturalSeconds / 15;
+  const speed = Math.max(1.05, speedForCap);
+  return Math.min(1.35, Number(speed.toFixed(2)));
 }
 
 export function ReadAloudButton({ text, cacheKey, className = '' }: ReadAloudButtonProps) {
