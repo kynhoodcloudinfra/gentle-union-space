@@ -1,24 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface FilmStripTimerProps {
   duration: number;
   onExpire: () => void;
   isRunning: boolean;
+  onTick?: (secondsLeft: number) => void;
 }
 
-export function FilmStripTimer({ duration, onExpire, isRunning }: FilmStripTimerProps) {
+export function FilmStripTimer({ duration, onExpire, isRunning, onTick }: FilmStripTimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration);
+  const lastDurationRef = useRef(duration);
+
+  // Only snap to `duration` when the parent explicitly resets it
+  // (e.g. new question via `key` remount). Ignore incidental prop churn.
+  useEffect(() => {
+    if (duration !== lastDurationRef.current) {
+      lastDurationRef.current = duration;
+      setTimeLeft(duration);
+    }
+  }, [duration]);
 
   useEffect(() => {
     if (!isRunning) return;
     if (timeLeft <= 0) { onExpire(); return; }
-    const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+    const t = setTimeout(() => {
+      const next = timeLeft - 1;
+      setTimeLeft(next);
+      onTick?.(next);
+    }, 1000);
     return () => clearTimeout(t);
-  }, [timeLeft, isRunning, onExpire]);
+  }, [timeLeft, isRunning, onExpire, onTick]);
 
-  useEffect(() => { setTimeLeft(duration); }, [duration]);
-
-  const pct = (timeLeft / duration) * 100;
+  const total = lastDurationRef.current || duration || 1;
+  const pct = Math.max(0, Math.min(100, (timeLeft / total) * 100));
   const urgent = timeLeft <= 5;
 
   return (
