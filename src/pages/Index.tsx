@@ -268,7 +268,7 @@ export default function Index() {
                 </span>
               </div>
               <h2 className="font-serif text-lg text-accent gold-glow leading-snug">
-                2 Exclusive Tickets to <span className="italic">Thenisai Baasha Deva</span> — Live in Chennai
+                WIN TWO EXCLUSIVE TICKETS !!!&nbsp;
               </h2>
               <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                 Get ready! The top maestro wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19</span>. 🎶
