@@ -267,7 +267,7 @@ export default function Index() {
                   <span className="text-[9px] tracking-[0.25em] uppercase text-accent font-serif">The Prize</span>
                 </span>
               </div>
-              <h2 className="font-serif text-lg text-accent gold-glow leading-snug">
+              <h2 className=\"font-serif text-xl font-bold text-accent gold-glow leading-tight tracking-wide mb-1\">
                 WIN TWO EXCLUSIVE TICKETS !!!&nbsp;
               </h2>
               <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
