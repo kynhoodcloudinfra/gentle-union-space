@@ -14,6 +14,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
 import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, Gift } from 'lucide-react';
 import devaConcertPoster from '@/assets/deva-concert.jpeg.asset.json';
+import { WinnerRevealCard } from '@/components/WinnerRevealCard';
+import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
+import { WinnerCelebrationModal } from '@/components/WinnerCelebrationModal';
+import { isRevealDay, isPostReveal, loadWinnerSnapshot, saveWinnerSnapshot, type WinnerSnapshot } from '@/lib/dateIST';
 
 interface LeaderboardEntry {
   phone_number: string;
