@@ -41,6 +41,9 @@ export default function Index() {
   const [quizOpen, setQuizOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [playedToday, setPlayedToday] = useState(false);
+  const revealDay = useMemo(() => isRevealDay(), []);
+  const postReveal = useMemo(() => isPostReveal(), []);
+  const [previousWinner, setPreviousWinner] = useState<WinnerSnapshot | null>(() => loadWinnerSnapshot());
 
   const month = getCurrentMonth();
   const dayNumber = getTodayDayNumber();
