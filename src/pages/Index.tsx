@@ -275,7 +275,7 @@ export default function Index() {
                 WIN TWO EXCLUSIVE TICKETS&nbsp;
               </h2>
               <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                Get ready! The top maestro wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19</span>. 🎶
+                Get ready! The top player wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19, YMCA Nandanam</span>&nbsp;🎶
               </p>
             </div>
           </div>
