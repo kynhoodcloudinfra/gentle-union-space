@@ -1,38 +1,62 @@
-## 1. Fix "Read aloud" — `NotSupportedError: no supported source`
 
-**Root cause:** `supabase.functions.invoke` inspects the response `Content-Type`; for `audio/mpeg` the current SDK returns the payload as **text/JSON-decoded**, so wrapping it in `new Blob([data], { type: 'audio/mpeg' })` produces bytes that are no longer a valid MP3 → `<audio>` throws `NotSupportedError`. The edge function itself returns valid MP3 (confirmed via curl).
+## Overview
 
-**Fix in `src/components/ReadAloudButton.tsx`:** stop using `supabase.functions.invoke` for this binary endpoint. Call the function URL directly with `fetch` and read `response.blob()` so the raw MP3 bytes reach `<audio>` intact.
+On **July 19, 2026 (IST, all day)** the reward card on the homepage becomes a live winner reveal. The current #1 on the leaderboard (by `total_score`, computed at load time) is treated as the winner. From **July 20 onward**, the reward card becomes a "Rewards coming soon" placeholder with a small "Previous winner" credit.
 
-- Build URL from `import.meta.env.VITE_SUPABASE_URL` + `/functions/v1/tts-question`.
-- Send `Authorization: Bearer <VITE_SUPABASE_PUBLISHABLE_KEY>` and `apikey` headers.
-- Check `response.ok`; on failure, surface `response.text()` in the toast.
-- Keep the per-question blob-URL cache and idle/loading/playing state machine unchanged.
+## Behavior by date (Asia/Kolkata)
 
-## 2. Pause timer when the question isn't visible; resume on reopen
+- **Before July 19**: current concert poster card stays exactly as is.
+- **July 19 (00:00–23:59 IST)**:
+  - Reward card becomes a **Winner Reveal card** on the homepage: gold-accent, celebratory copy, shows winner display name / @kyn_username, avatar, total score.
+  - Non-winners see a subtitle: *"Keep playing — you could be the next one."*
+  - The winning user (matched by `phone_number` === leaderboard rank 1) sees a **full-screen celebration modal on every visit/login** that day (not dismissible-forever; reopens each mount). Contents:
+    - Confetti + gold gradient + "🎉 You won!" headline
+    - Their name + score
+    - Gratifying message
+    - CTA line: "WhatsApp or call +91 91767 77632"
+    - Two buttons:
+      - **WhatsApp** → `https://wa.me/919176777632?text=<prefilled congrats claim message>`
+      - **Call** → `tel:+919176777632`
+    - Small "Close" affordance (still reopens next visit).
+- **July 20 onward**:
+  - Reward card replaced with **"Rewards coming soon"** banner (same card aesthetic — gold border, film-grain, ornamental divider, no image).
+  - Below it, small line: *"Previous winner: {displayName} · {score} pts"* using the winner locked in at reveal time.
 
-Applies to **all** question types and every user. The countdown must not tick while the quiz modal is closed or the tab is hidden.
+## Winner determination
 
-**Edits in `src/components/QuizModal.tsx`:**
-- Replace the single `startTime` number with a `remainingSeconds` state (initialised to 45 when a fresh question loads).
-- Drive `FilmStripTimer` with `duration={remainingSeconds}` and `isRunning={open && !document.hidden && !result && !!question}`.
-- On every tick from the timer, mirror the current remaining seconds back into state so closing/reopening resumes from that exact value.
-- Compute `time_taken_seconds` submitted to the DB as `45 - remainingSeconds` (rounded to 0.1s) instead of `(Date.now() - startTime)/1000`, so pausing doesn't inflate the elapsed time and the existing score tiers stay accurate.
-- Listen to `document.visibilitychange` and force a re-render so the `isRunning` prop flips when the tab is backgrounded/foregrounded.
+- "Winner" = entry at index 0 of the same aggregated & sorted `data` array already computed in `Index.tsx` (highest `total_score`, live).
+- For the July 20+ "previous winner" credit, snapshot the July 19 winner into **localStorage** the first time the page loads on/after July 19 (`raja-quiz:winner-jul19` = `{ phone_number, display_name, kyn_username, total_score, avatar_id, profile_image_url }`). Read from it on July 20+. This avoids a schema change and works with the app's no-auth model.
 
-**Edits in `src/components/FilmStripTimer.tsx`:**
-- Accept an optional `onTick?: (secondsLeft: number) => void` and call it each second so the parent can persist `remainingSeconds`.
-- Guard the `setTimeout` with `isRunning` (already partly done) and clear the timeout when `isRunning` flips to false so no stray tick fires while paused.
-- Do **not** reset `timeLeft` to `duration` on every `duration` change — only when a *new question id* mounts. The parent already remounts the timer via `key={question.id}`, so keep the reset effect but make it a no-op when the incoming `duration` matches the current `timeLeft` (prevents the reopen from snapping back to 45).
+## Date gate (IST)
 
-**How reopen works:** `Index.tsx` opens the modal via the "Today's Puzzle" card; when `open` flips true, `isRunning` becomes true and the timer resumes from the saved `remainingSeconds`. No extra plumbing needed on the Index page.
+Small helper `getISTDateParts()` using `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' })` to get `YYYY-MM-DD`. Derived booleans:
+- `isRevealDay` = IST date === `2026-07-19`
+- `isPostReveal` = IST date > `2026-07-19`
 
-**Timeout still fires correctly:** when `remainingSeconds` reaches 0, `FilmStripTimer` calls `onExpire`, which still routes to `submitAnswer('(timed out)')`.
+## File changes
 
-## 3. Files touched
+1. **`src/lib/dateIST.ts`** (new) — `getISTDate()`, `isRevealDay()`, `isPostReveal()` helpers.
+2. **`src/components/WinnerRevealCard.tsx`** (new) — replaces the current concert-poster JSX block. Props: `winner`, `isMe`. Renders reveal-day card (gold, celebratory, avatar+name+score+message).
+3. **`src/components/RewardsComingSoonCard.tsx`** (new) — post-July-19 placeholder with "Previous winner" line.
+4. **`src/components/WinnerCelebrationModal.tsx`** (new) — full-screen modal, confetti (lightweight CSS/SVG, no new dep), WhatsApp + Call buttons, shown on every mount for winner on July 19.
+5. **`src/pages/Index.tsx`** — conditional render:
+   - `isRevealDay && data.length > 0` → `<WinnerRevealCard winner={data[0]} isMe={data[0]?.phone_number === phoneNumber} />` and mount `<WinnerCelebrationModal>` when I am the winner. Also persist winner snapshot to localStorage.
+   - `isPostReveal` → `<RewardsComingSoonCard previousWinner={snapshot} />`
+   - else → existing concert-poster card unchanged.
 
-- `src/components/ReadAloudButton.tsx` — swap `supabase.functions.invoke` for direct `fetch` + `response.blob()`.
-- `src/components/QuizModal.tsx` — `remainingSeconds` state, visibility-aware `isRunning`, elapsed-time computed from remaining.
-- `src/components/FilmStripTimer.tsx` — `onTick` callback, only reset on genuine duration change, clear timeout when paused.
+No backend/schema/RLS changes. No new dependencies (confetti done with pure CSS/SVG to stay in-aesthetic).
 
-No DB, edge function, or scoring-tier changes.
+## Buttons (technical)
+
+- WhatsApp: `<a href="https://wa.me/919176777632?text=Hi!%20I%20won%20today's%20Paattu%20Puzzle%20🎉">` — opens WhatsApp app on mobile, web on desktop.
+- Call: `<a href="tel:+919176777632">` — opens dialer.
+
+## Styling
+
+Reuses existing tokens: `bg-card`, `border-accent`, `gold-glow`, `font-serif`, `film-grain`. No hardcoded hex outside existing patterns already in the file. Modal uses shadcn `Dialog` with a custom celebratory inner layout.
+
+## Out of scope
+
+- No admin UI to override winner.
+- No email/SMS to winner.
+- No analytics event.

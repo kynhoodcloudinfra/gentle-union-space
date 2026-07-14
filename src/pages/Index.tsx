@@ -14,6 +14,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
 import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, Gift } from 'lucide-react';
 import devaConcertPoster from '@/assets/deva-concert.jpeg.asset.json';
+import { WinnerRevealCard } from '@/components/WinnerRevealCard';
+import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
+import { WinnerCelebrationModal } from '@/components/WinnerCelebrationModal';
+import { isRevealDay, isPostReveal, loadWinnerSnapshot, saveWinnerSnapshot, type WinnerSnapshot } from '@/lib/dateIST';
 
 interface LeaderboardEntry {
   phone_number: string;
@@ -37,6 +41,9 @@ export default function Index() {
   const [quizOpen, setQuizOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [playedToday, setPlayedToday] = useState(false);
+  const revealDay = useMemo(() => isRevealDay(), []);
+  const postReveal = useMemo(() => isPostReveal(), []);
+  const [previousWinner, setPreviousWinner] = useState<WinnerSnapshot | null>(() => loadWinnerSnapshot());
 
   const month = getCurrentMonth();
   const dayNumber = getTodayDayNumber();
@@ -127,6 +134,26 @@ export default function Index() {
     () => data.find(e => e.phone_number === phoneNumber),
     [data, phoneNumber]
   );
+
+  const currentWinner = data[0];
+  const iAmWinner = revealDay && !!currentWinner && currentWinner.phone_number === phoneNumber;
+
+  // Persist winner snapshot on reveal day so post-reveal card can show it.
+  useEffect(() => {
+    if (revealDay && currentWinner) {
+      const snap: WinnerSnapshot = {
+        phone_number: currentWinner.phone_number,
+        name: currentWinner.name,
+        display_name: currentWinner.display_name,
+        kyn_username: currentWinner.kyn_username,
+        total_score: currentWinner.total_score,
+        avatar_id: currentWinner.avatar_id,
+        profile_image_url: currentWinner.profile_image_url,
+      };
+      saveWinnerSnapshot(snap);
+      setPreviousWinner(snap);
+    }
+  }, [revealDay, currentWinner]);
 
   // Header reflects live context values immediately (display name + avatar updates)
   const meDisplayName = ctxDisplayName ?? me?.display_name ?? 'Maestro';
@@ -249,36 +276,42 @@ export default function Index() {
             </button>
           )}
 
-          {/* Prize reveal — Deva concert */}
-          <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/40 rounded-2xl overflow-hidden mb-6 film-grain shadow-lg shadow-accent/10">
-            {/* Top reward banner */}
-            <div className="relative bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-b border-accent/30 py-3 px-4">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(40,55%,55%,0.15),transparent_70%)] pointer-events-none" />
-              <div className="relative flex items-center justify-center gap-2">
-                <Gift size={16} className="text-accent" />
-                <span className="text-sm tracking-[0.35em] uppercase text-accent font-serif font-bold">THE REWARD</span>
-                <Gift size={16} className="text-accent" />
+          {/* Reward / winner slot */}
+          {revealDay && currentWinner ? (
+            <WinnerRevealCard winner={currentWinner} isMe={iAmWinner} />
+          ) : postReveal ? (
+            <RewardsComingSoonCard previousWinner={previousWinner} />
+          ) : (
+            <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/40 rounded-2xl overflow-hidden mb-6 film-grain shadow-lg shadow-accent/10">
+              {/* Top reward banner */}
+              <div className="relative bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-b border-accent/30 py-3 px-4">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(40,55%,55%,0.15),transparent_70%)] pointer-events-none" />
+                <div className="relative flex items-center justify-center gap-2">
+                  <Gift size={16} className="text-accent" />
+                  <span className="text-sm tracking-[0.35em] uppercase text-accent font-serif font-bold">THE REWARD</span>
+                  <Gift size={16} className="text-accent" />
+                </div>
+              </div>
+
+              <div className="relative">
+                <img
+                  src={devaConcertPoster.url}
+                  alt="Thenisai Baasha Deva — Live in Chennai concert poster"
+                  className="w-full h-auto block"
+                  loading="lazy"
+                />
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+              </div>
+              <div className="relative px-4 pt-3 pb-4">
+                <h2 className="font-serif text-xl font-bold text-accent gold-glow leading-tight tracking-wide mb-1">
+                  WIN TWO EXCLUSIVE TICKETS&nbsp;
+                </h2>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  Get ready! The top player wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19, YMCA Nandanam</span>&nbsp;🎶
+                </p>
               </div>
             </div>
-
-            <div className="relative">
-              <img
-                src={devaConcertPoster.url}
-                alt="Thenisai Baasha Deva — Live in Chennai concert poster"
-                className="w-full h-auto block"
-                loading="lazy"
-              />
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
-            </div>
-            <div className="relative px-4 pt-3 pb-4">
-              <h2 className="font-serif text-xl font-bold text-accent gold-glow leading-tight tracking-wide mb-1">
-                WIN TWO EXCLUSIVE TICKETS&nbsp;
-              </h2>
-              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                Get ready! The top player wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19, YMCA Nandanam</span>&nbsp;🎶
-              </p>
-            </div>
-          </div>
+          )}
 
 
           {/* Leaderboard heading + legend */}
@@ -364,6 +397,8 @@ export default function Index() {
           onOpenChange={setQuizOpen}
           onSubmitted={() => { loadData(); checkPlayedToday(); }}
         />
+
+        {iAmWinner && currentWinner && <WinnerCelebrationModal winner={currentWinner} />}
       </div>
     </TooltipProvider>
   );
