@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
 import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, Gift } from 'lucide-react';
+import devaConcertPoster from '@/assets/deva-concert.jpeg.asset.json';
 
 interface LeaderboardEntry {
   phone_number: string;
@@ -248,20 +249,30 @@ export default function Index() {
             </button>
           )}
 
-          {/* What's the prize? */}
-          <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/30 rounded-2xl p-4 mb-6 film-grain overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,hsl(40,55%,55%,0.12),transparent_65%)] pointer-events-none" />
-            <div className="flex items-start gap-3 relative">
-              <div className="w-10 h-10 shrink-0 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center">
-                <Gift size={18} className="text-accent" />
+          {/* Prize reveal — Deva concert */}
+          <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/40 rounded-2xl overflow-hidden mb-6 film-grain shadow-lg shadow-accent/10">
+            <div className="relative">
+              <img
+                src={devaConcertPoster.url}
+                alt="Thenisai Baasha Deva — Live in Chennai, 19 July 2026 at YMCA Grounds Nandanam"
+                className="w-full h-auto block"
+                loading="lazy"
+              />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+            </div>
+            <div className="relative px-4 pt-3 pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 border border-accent/40">
+                  <Gift size={11} className="text-accent" />
+                  <span className="text-[9px] tracking-[0.25em] uppercase text-accent font-serif">The Prize</span>
+                </span>
               </div>
-              <div className="flex-1">
-                <p className="text-[10px] tracking-[0.25em] uppercase text-accent/80 font-serif">Coming Soon</p>
-                <h2 className="font-serif text-lg text-accent gold-glow leading-tight">What's the prize?</h2>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Play and earn points to unlock an exclusive prize. The prize will be revealed soon — stay tuned.
-                </p>
-              </div>
+              <h2 className="font-serif text-lg text-accent gold-glow leading-snug">
+                2 Exclusive Tickets to <span className="italic">Thenisai Baasha Deva</span> — Live in Chennai
+              </h2>
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                Get ready! The top maestro wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19</span>. 🎶
+              </p>
             </div>
           </div>
 
