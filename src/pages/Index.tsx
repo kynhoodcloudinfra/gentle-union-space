@@ -397,6 +397,8 @@ export default function Index() {
           onOpenChange={setQuizOpen}
           onSubmitted={() => { loadData(); checkPlayedToday(); }}
         />
+
+        {iAmWinner && currentWinner && <WinnerCelebrationModal winner={currentWinner} />}
       </div>
     </TooltipProvider>
   );
