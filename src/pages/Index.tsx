@@ -135,6 +135,26 @@ export default function Index() {
     [data, phoneNumber]
   );
 
+  const currentWinner = data[0];
+  const iAmWinner = revealDay && !!currentWinner && currentWinner.phone_number === phoneNumber;
+
+  // Persist winner snapshot on reveal day so post-reveal card can show it.
+  useEffect(() => {
+    if (revealDay && currentWinner) {
+      const snap: WinnerSnapshot = {
+        phone_number: currentWinner.phone_number,
+        name: currentWinner.name,
+        display_name: currentWinner.display_name,
+        kyn_username: currentWinner.kyn_username,
+        total_score: currentWinner.total_score,
+        avatar_id: currentWinner.avatar_id,
+        profile_image_url: currentWinner.profile_image_url,
+      };
+      saveWinnerSnapshot(snap);
+      setPreviousWinner(snap);
+    }
+  }, [revealDay, currentWinner]);
+
   // Header reflects live context values immediately (display name + avatar updates)
   const meDisplayName = ctxDisplayName ?? me?.display_name ?? 'Maestro';
   const meAvatarId = ctxAvatarId ?? me?.avatar_id ?? null;
