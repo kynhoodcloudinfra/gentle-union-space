@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
 import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, Gift } from 'lucide-react';
+import devaConcertPoster from '@/assets/deva-concert.jpeg.asset.json';
 
 interface LeaderboardEntry {
   phone_number: string;
