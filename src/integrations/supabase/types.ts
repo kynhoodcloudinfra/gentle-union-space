@@ -56,6 +56,42 @@ export type Database = {
         }
         Relationships: []
       }
+      players_since_jun1: {
+        Row: {
+          correct_count: number
+          first_played_at: string | null
+          kyn_username: string | null
+          last_played_at: string | null
+          name: string
+          phone_number: string
+          points_since_jun1: number
+          quizzes_played: number
+          updated_at: string
+        }
+        Insert: {
+          correct_count?: number
+          first_played_at?: string | null
+          kyn_username?: string | null
+          last_played_at?: string | null
+          name: string
+          phone_number: string
+          points_since_jun1?: number
+          quizzes_played?: number
+          updated_at?: string
+        }
+        Update: {
+          correct_count?: number
+          first_played_at?: string | null
+          kyn_username?: string | null
+          last_played_at?: string | null
+          name?: string
+          phone_number?: string
+          points_since_jun1?: number
+          quizzes_played?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           activated_at: string | null
@@ -174,6 +210,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      rebuild_players_since_jun1: { Args: never; Returns: undefined }
       rotate_active_question: {
         Args: never
         Returns: {
