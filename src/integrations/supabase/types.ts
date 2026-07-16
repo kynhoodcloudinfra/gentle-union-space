@@ -211,6 +211,11 @@ export type Database = {
     }
     Functions: {
       rebuild_players_since_jun1: { Args: never; Returns: undefined }
+      recompute_leaderboard_all: { Args: never; Returns: undefined }
+      recompute_leaderboard_for: {
+        Args: { p_phone: string }
+        Returns: undefined
+      }
       rotate_active_question: {
         Args: never
         Returns: {
@@ -228,6 +233,17 @@ export type Database = {
           question_text: string
           question_type: string
         }[]
+      }
+      update_leaderboard_identity: {
+        Args: {
+          p_avatar_id?: number
+          p_clear_profile_image?: boolean
+          p_display_name?: string
+          p_kyn_username?: string
+          p_phone: string
+          p_profile_image_url?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
