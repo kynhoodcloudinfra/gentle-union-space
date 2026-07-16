@@ -175,46 +175,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [authStatus, user, profileLoaded, loadProfile]);
 
-  const persistProfileField = useCallback(async (fields: {
-    display_name?: string;
-    name?: string;
-    kyn_username?: string;
-    profile_image_url?: string | null;
+  const callIdentityRpc = useCallback(async (fields: {
+    display_name?: string | null;
+    kyn_username?: string | null;
     avatar_id?: number | null;
+    profile_image_url?: string | null;
+    clear_profile_image?: boolean;
   }) => {
     if (!user) return;
-    // Update every leaderboard row for this user (across months) so it stays consistent
-    await supabase
-      .from('leaderboard')
-      .update(fields)
-      .eq('phone_number', user.phone);
+    // @ts-ignore — RPC not in generated types yet
+    await supabase.rpc('update_leaderboard_identity', {
+      p_phone: user.phone,
+      p_display_name: fields.display_name ?? null,
+      p_kyn_username: fields.kyn_username ?? null,
+      p_avatar_id: fields.avatar_id ?? null,
+      p_profile_image_url: fields.profile_image_url ?? null,
+      p_clear_profile_image: fields.clear_profile_image ?? false,
+    });
   }, [user]);
 
   const setDisplayName = useCallback(async (newName: string) => {
     setDisplayNameState(newName);
     if (!user) return;
-    const { data: existing } = await supabase
-      .from('leaderboard')
-      .select('phone_number')
-      .eq('phone_number', user.phone)
-      .limit(1)
-      .maybeSingle();
-
     const handle = kynUsername ?? user.kynUsername;
-    if (existing) {
-      await persistProfileField({ display_name: newName, name: newName, kyn_username: handle });
-    } else {
-      await supabase.from('leaderboard').insert({
-        phone_number: user.phone,
-        name: newName,
-        display_name: newName,
-        kyn_username: handle,
-        total_score: 0,
-        streak: 0,
-        month: getCurrentMonth(),
-      });
-    }
-  }, [user, persistProfileField, kynUsername]);
+    await callIdentityRpc({ display_name: newName, kyn_username: handle });
+  }, [user, callIdentityRpc, kynUsername]);
 
   const setKynUsername = useCallback(async (raw: string): Promise<{ ok: true } | { ok: false; error: string }> => {
     if (!user) return { ok: false, error: 'Not signed in' };
@@ -232,39 +217,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (taken) return { ok: false, error: 'This username is already taken' };
 
     setKynUsernameState(username);
-    // Persist (insert row if user has none yet)
-    const { data: existing } = await supabase
-      .from('leaderboard')
-      .select('phone_number')
-      .eq('phone_number', user.phone)
-      .limit(1)
-      .maybeSingle();
-    if (existing) {
-      await persistProfileField({ kyn_username: username });
-    } else {
-      await supabase.from('leaderboard').insert({
-        phone_number: user.phone,
-        name: displayName ?? user.name,
-        display_name: displayName ?? user.name,
-        kyn_username: username,
-        total_score: 0,
-        streak: 0,
-        month: getCurrentMonth(),
-      });
-    }
+    await callIdentityRpc({
+      display_name: displayName ?? user.name,
+      kyn_username: username,
+    });
     return { ok: true };
-  }, [user, persistProfileField, displayName]);
+  }, [user, callIdentityRpc, displayName]);
 
   const setProfileImage = useCallback(async (url: string | null) => {
     setProfileImageUrlState(url);
-    await persistProfileField({ profile_image_url: url });
-  }, [persistProfileField]);
+    await callIdentityRpc({
+      profile_image_url: url,
+      clear_profile_image: url === null,
+    });
+  }, [callIdentityRpc]);
 
   const setAvatarId = useCallback(async (id: number) => {
     setAvatarIdState(id);
     setProfileImageUrlState(null);
-    await persistProfileField({ avatar_id: id, profile_image_url: null });
-  }, [persistProfileField]);
+    await callIdentityRpc({ avatar_id: id, clear_profile_image: true });
+  }, [callIdentityRpc]);
+
 
   const refreshProfile = useCallback(async () => {
     if (user) {
