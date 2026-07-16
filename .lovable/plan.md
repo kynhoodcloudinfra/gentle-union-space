@@ -1,77 +1,79 @@
-## Goal
 
-Add a new table in the cloud database that lists every player who has played at least one quiz on or after **June 1, 2026 (IST)**, along with their name, phone number, and the total points they've earned from that date onward.
+## Root cause
 
-Note on the trade-off: you picked "leaderboard (simpler)" as the source but "sum of points earned since Jun 1" as the score. Those don't match — `leaderboard.total_score` is cumulative across all time and isn't date-scoped. To honor the score choice, this plan computes points from `submissions` (the only date-stamped source), which is still simple because scoring is deterministic.
+`ravimkm` (phone `9043562641`) has **2,500 points, 0 submissions**:
 
-## New table: `public.players_since_jun1`
+```
+leaderboard: total_score=2500, streak=1, month=2026-07, last_played=2026-07-15
+submissions: 0 rows
+```
 
-Columns:
-- `phone_number` (primary key)
-- `name` — latest known display_name / name
-- `kyn_username` — for reference
-- `points_since_jun1` — integer, sum of scoring-rule points from correct submissions on/after 2026-06-01 IST
-- `quizzes_played` — count of submissions in that window
-- `correct_count` — count of correct submissions in that window
-- `first_played_at`, `last_played_at` — timestamps in the window
-- `updated_at`
+The leaderboard table has fully permissive RLS:
 
-Scoring rule applied per correct submission (matching existing app rule):
-- `time_taken_seconds ≤ 10` → 150
-- `≤ 20` → 125
-- otherwise → 100
-- incorrect → 0
+- `Anyone can insert leaderboard` (INSERT, check `true`)
+- `Anyone can update leaderboard` (UPDATE, using `true`)
 
-## How it stays fresh
+And the client writes scores directly (`QuizModal.tsx`, `UserContext.tsx`, `Index.tsx` — 10+ call sites). Anyone with the public anon key can open devtools / curl and PATCH any leaderboard row to any `total_score` without ever submitting an answer. No trigger validates that `total_score` matches actual submissions. That is what happened here — the score was written straight to the row, bypassing the quiz flow entirely.
 
-A database function `refresh_players_since_jun1()` recomputes the whole table from `submissions` where `submitted_at >= '2026-06-01' AT TIME ZONE 'Asia/Kolkata'`. It's called by a trigger on `submissions` after insert, so the table stays in sync automatically. It can also be run manually anytime.
+The `submissions` table is safe by comparison (INSERT-only, no UPDATE/DELETE), so it is the trustworthy source of truth.
 
-## Access
+## Fix
 
-- RLS enabled, permissive read/insert/update (matches the rest of this project — no auth).
-- Standard GRANTs to `anon`, `authenticated`, `service_role` so the Data API can reach it.
+Move scoring server-side and stop trusting client writes to `leaderboard`.
+
+### 1. Clean up the tampered row
+
+Reset `ravimkm` to the score derived from his actual submissions (0 pts, since he has none). Do it as a single UPDATE inside the migration.
+
+### 2. Derive leaderboard from submissions via trigger
+
+New security-definer function `public.recompute_leaderboard_for(phone text)`:
+- Aggregates that user's `submissions` grouped by `month` (YYYY-MM in IST).
+- For each month row, computes `total_score` using the existing rule (150 / 125 / 100 based on `time_taken_seconds`, 0 if incorrect) and `streak` from consecutive IST days ending at the latest `last_played_date`.
+- UPSERTs the matching `(phone_number, month)` leaderboard row. Never writes an arbitrary caller-supplied score.
+- Preserves identity fields (`name`, `display_name`, `kyn_username`, `avatar_id`, `profile_image_url`) — takes them from the latest submission, or leaves existing values if a row already exists.
+
+Add `AFTER INSERT ON submissions` trigger that calls `recompute_leaderboard_for(NEW.phone_number)`. This makes the leaderboard a projection of `submissions`; it cannot drift.
+
+Also add a one-shot `recompute_leaderboard_all()` and run it once inside the migration to correct any other tampered rows.
+
+### 3. Lock down direct leaderboard writes
+
+Replace the permissive policies:
+
+- Drop `Anyone can insert leaderboard` and `Anyone can update leaderboard`.
+- Keep `Anyone can read leaderboard` (public leaderboard UI needs it).
+- Revoke `INSERT, UPDATE, DELETE` from `anon` and `authenticated`; keep `SELECT`. Keep `ALL` for `service_role` so the trigger (SECURITY DEFINER) and admin tools still work.
+
+Identity-only fields users legitimately change (avatar, display_name, kyn_username, profile_image_url) need a narrow path:
+
+- New security-definer function `public.update_leaderboard_identity(p_phone text, p_display_name text, p_kyn_username text, p_avatar_id int, p_profile_image_url text)` — updates only those columns across all month rows for that phone. Never touches `total_score` / `streak` / `last_played_date`.
+- Grant EXECUTE to `anon, authenticated`.
+
+### 4. Update client code
+
+- Replace every client `leaderboard.update({ total_score, streak, ... })` / `leaderboard.insert(...)` in `QuizModal.tsx`, `UserContext.tsx`, `Index.tsx` with either:
+  - nothing (score updates now happen automatically via the submissions trigger), or
+  - a call to `update_leaderboard_identity` RPC for avatar / display name / kyn_username changes.
+- Keep the existing `submissions.insert(...)` — that is now the sole way to earn points.
+- Admin `LeaderboardTab` is read-only already; no change.
+
+### 5. Verify
+
+- Migration re-runs `recompute_leaderboard_all()`; `ravimkm` returns to 0.
+- Manual check via psql: try `UPDATE leaderboard SET total_score = 9999 WHERE phone_number = '...'` as anon (should fail).
+- Play through a quiz in the preview, confirm score appears on the leaderboard (via the trigger, not a client write).
+- Confirm avatar / display name change still works through the new RPC.
 
 ## Out of scope
 
-- No admin UI for this table in this change (you asked for the table itself, in the cloud). If you later want a viewer/export tab in Admin, we can add that as a follow-up.
-- No backfill of historical points before June 1 — by design.
+- Rate-limiting submissions (a separate concern — currently anyone can spam correct answers if they know them; that's a different fix).
+- Auth / login (project intentionally has none per memory).
+- Backfilling `players_since_jun1` beyond what its existing trigger already handles (its `rebuild` function reads from `submissions`, so it self-corrects on next insert).
 
-## Technical details
+## Technical notes
 
-```text
-CREATE TABLE public.players_since_jun1 (
-  phone_number text PRIMARY KEY,
-  name text NOT NULL,
-  kyn_username text,
-  points_since_jun1 integer NOT NULL DEFAULT 0,
-  quizzes_played integer NOT NULL DEFAULT 0,
-  correct_count integer NOT NULL DEFAULT 0,
-  first_played_at timestamptz,
-  last_played_at timestamptz,
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-```
-
-Function pseudocode:
-```text
-DELETE FROM players_since_jun1;
-INSERT INTO players_since_jun1 (...)
-SELECT
-  phone_number,
-  max(coalesce(display_name, name)),
-  max(kyn_username),
-  sum(CASE WHEN is_correct THEN
-    CASE WHEN time_taken_seconds <= 10 THEN 150
-         WHEN time_taken_seconds <= 20 THEN 125
-         ELSE 100 END
-    ELSE 0 END),
-  count(*),
-  count(*) FILTER (WHERE is_correct),
-  min(submitted_at),
-  max(submitted_at)
-FROM submissions
-WHERE submitted_at >= timestamp '2026-06-01 00:00' AT TIME ZONE 'Asia/Kolkata'
-GROUP BY phone_number;
-```
-
-Trigger: `AFTER INSERT ON submissions FOR EACH STATEMENT EXECUTE FUNCTION refresh_players_since_jun1()`.
+- Functions use `SECURITY DEFINER SET search_path = public` per project convention.
+- Scoring rule mirrors `rebuild_players_since_jun1` exactly (150 ≤10s, 125 ≤20s, else 100).
+- Streak logic: consecutive IST calendar days with at least one submission ending at max submission date; reset to 1 if latest gap > 1 day.
+- Migration order: create functions → create trigger → drop old policies → revoke grants → run recompute → done.
