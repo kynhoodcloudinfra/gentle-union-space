@@ -204,6 +204,24 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           : (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 125 : 100))
       : 0;
 
+    // Ensure user has an avatar (first-time players). Never sets score/streak.
+    const { data: existingAvatarRow } = await supabase
+      .from('leaderboard')
+      .select('avatar_id')
+      .eq('phone_number', phoneNumber)
+      .not('avatar_id', 'is', null)
+      .limit(1)
+      .maybeSingle();
+    if (!existingAvatarRow?.avatar_id) {
+      // @ts-ignore — RPC not in generated types yet
+      await supabase.rpc('update_leaderboard_identity', {
+        p_phone: phoneNumber,
+        p_display_name: displayName,
+        p_kyn_username: kynUsername,
+        p_avatar_id: getRandomAvatarId(),
+      });
+    }
+
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
       name: displayName,
@@ -217,81 +235,30 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       month,
     });
 
-    const { data: existingLb } = await supabase
+
+    // Server-side trigger recomputes leaderboard (score/streak/last_played) from submissions.
+    // Read the fresh values back so the result screen matches what other users will see.
+    const { data: lbRow } = await supabase
       .from('leaderboard')
-      .select('*')
+      .select('total_score, streak')
       .eq('phone_number', phoneNumber)
       .eq('month', month)
       .maybeSingle();
 
-    let avatarId: number | null = null;
-    const { data: prevEntry } = await supabase
-      .from('leaderboard')
-      .select('avatar_id')
-      .eq('phone_number', phoneNumber)
-      .not('avatar_id', 'is', null)
-      .limit(1)
-      .maybeSingle();
-    avatarId = prevEntry?.avatar_id ?? getRandomAvatarId();
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    if (existingLb) {
-      const newStreak = existingLb.last_played_date === yesterdayStr
-        ? existingLb.streak + 1
-        : existingLb.last_played_date === todayStr ? existingLb.streak : 1;
-
-      await supabase
-        .from('leaderboard')
-        .update({
-          total_score: existingLb.total_score + score,
-          streak: newStreak,
-          last_played_date: todayStr,
-          name: displayName,
-          display_name: displayName,
-          kyn_username: kynUsername,
-          avatar_id: existingLb.avatar_id ?? avatarId,
-        })
-        .eq('phone_number', phoneNumber)
-        .eq('month', month);
-
-      setResult({
-        isCorrect, score,
-        totalScore: existingLb.total_score + score,
-        streak: newStreak,
-        correctAnswer: question.correct_answer,
-        userAnswer: answer,
-        question,
-      });
-    } else {
-      await supabase.from('leaderboard').insert({
-        phone_number: phoneNumber,
-        name: displayName,
-        display_name: displayName,
-        kyn_username: kynUsername,
-        total_score: score,
-        streak: 1,
-        last_played_date: todayStr,
-        month,
-        avatar_id: avatarId,
-      });
-
-      setResult({
-        isCorrect, score,
-        totalScore: score,
-        streak: 1,
-        correctAnswer: question.correct_answer,
-        userAnswer: answer,
-        question,
-      });
-    }
+    setResult({
+      isCorrect,
+      score,
+      totalScore: lbRow?.total_score ?? score,
+      streak: lbRow?.streak ?? 1,
+      correctAnswer: question.correct_answer,
+      userAnswer: answer,
+      question,
+    });
 
     setSubmitting(false);
     onSubmitted?.();
   }, [submitting, question, phoneNumber, displayName, kynUsername, remainingSeconds, onSubmitted]);
+
 
   const handleTimeout = useCallback(() => {
     submitAnswer('(timed out)');
