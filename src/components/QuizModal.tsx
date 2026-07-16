@@ -204,6 +204,24 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           : (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 125 : 100))
       : 0;
 
+    // Ensure user has an avatar (first-time players). Never sets score/streak.
+    const { data: existingAvatarRow } = await supabase
+      .from('leaderboard')
+      .select('avatar_id')
+      .eq('phone_number', phoneNumber)
+      .not('avatar_id', 'is', null)
+      .limit(1)
+      .maybeSingle();
+    if (!existingAvatarRow?.avatar_id) {
+      // @ts-ignore — RPC not in generated types yet
+      await supabase.rpc('update_leaderboard_identity', {
+        p_phone: phoneNumber,
+        p_display_name: displayName,
+        p_kyn_username: kynUsername,
+        p_avatar_id: getRandomAvatarId(),
+      });
+    }
+
     await supabase.from('submissions').insert({
       phone_number: phoneNumber,
       name: displayName,
@@ -216,6 +234,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       time_taken_seconds: Math.round(timeTaken * 10) / 10,
       month,
     });
+
 
     // Server-side trigger recomputes leaderboard (score/streak/last_played) from submissions.
     // Read the fresh values back so the result screen matches what other users will see.
