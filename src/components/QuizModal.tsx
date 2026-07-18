@@ -222,7 +222,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       });
     }
 
-    await supabase.from('submissions').insert({
+    const { error: submitError } = await supabase.from('submissions').insert({
       phone_number: phoneNumber,
       name: displayName,
       display_name: displayName,
@@ -234,6 +234,12 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       time_taken_seconds: Math.round(timeTaken * 10) / 10,
       month,
     });
+    if (submitError) {
+      console.error('submission insert failed', submitError);
+      alert(`Could not save your answer: ${submitError.message}. Please try again.`);
+      setSubmitting(false);
+      return;
+    }
 
 
     // Server-side trigger recomputes leaderboard (score/streak/last_played) from submissions.
