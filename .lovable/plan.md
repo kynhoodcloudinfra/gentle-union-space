@@ -1,19 +1,46 @@
-## Answer: Yes, the ranking shift is a direct side effect of the two prior fixes
+## Root cause
 
-No new change is needed. The rankings correctly reflect legitimate scores now.
+Reproduced by POSTing a submission as `anon` against the REST API:
 
-### Two events reshuffled the top of the board
+```
+HTTP/2 400
+proxy-status: PostgREST; error=21000
+{"code":"21000","message":"DELETE requires a WHERE clause"}
+```
 
-1. **Ravimkm reset (security fix)** — `9043562641` had a tampered 2500 with zero real submissions. He was sitting at rank #1. When the trigger recomputed his row from `submissions`, he dropped to 0. Everyone below him moved up one position.
-2. **Day-47 voided question** — Every submission for today's incorrect question was deleted, and the leaderboard was recomputed. Players who had answered day 47 lost 100–150 points; players who hadn't (like `9789953673`) kept their totals and floated up as those above them fell.
+Since day 46 (2026-07-15) there are **zero** rows in `submissions` even though questions 47, 48, 49 have been live. The failure chain:
 
-### Net effect on `9789953673`
+1. Client (`QuizModal.submitAnswer`) inserts into `public.submissions`.
+2. `trg_refresh_players_since_jun1` (AFTER INSERT) calls `public.rebuild_players_since_jun1()`.
+3. That function's first statement is `DELETE FROM public.players_since_jun1;` — no WHERE clause.
+4. Supabase's API-side safeguard aborts the whole transaction with SQLSTATE `21000`.
+5. The INSERT is rolled back. The client code doesn't inspect the error, so the UI shows "Correct!" / result screen using values it computed locally, but nothing is persisted and the leaderboard trigger never runs.
 
-- Her score: **1400 → 1400** (unchanged, fully backed by 11 correct submissions).
-- Her rank: **#6 → #3**, purely because at least three players above her either (a) were ravimkm at 2500 who dropped to 0, or (b) lost day-47 points.
+That is why 8220850225 (and everyone else) is stuck at their pre-July-15 totals no matter how many correct answers they submit afterwards.
 
-### Proposal
+## Fix
 
-**No changes.** The current leaderboard is the correct post-cleanup state. The two fixes did exactly what they were supposed to do; the visible rank shift is the honest consequence of removing illegitimate/voided points.
+Rewrite `public.rebuild_players_since_jun1()` so it no longer issues an unqualified DELETE. Use `TRUNCATE public.players_since_jun1` (allowed inside a SECURITY DEFINER function and not blocked by the safeguard), then reinsert as today.
 
-If you want, I can produce a "top 10 before vs after both fixes" table so you can see who moved and by how much — say the word and I'll run it.
+Also harden the client so this class of silent failure surfaces next time:
+
+- In `QuizModal.submitAnswer`, capture the `error` from the `submissions` insert and, if present, show a toast and abort instead of rendering a fake result screen.
+
+## Backfill
+
+After the trigger is fixed, no historical replay is needed for missing scores — users can just play the next active question and the leaderboard will update. Days 47/48/49 are already past; those attempts weren't recorded anywhere, so they can't be reconstructed. Call this out in the reply to the user.
+
+## Verification
+
+1. After the migration, `curl` an insert as anon against `/rest/v1/submissions` → expect 201, row visible in the table.
+2. Confirm `leaderboard.total_score` for the test row's phone jumps by the trigger-computed amount.
+3. Delete the test row.
+
+## Files touched
+
+- Migration: replace body of `public.rebuild_players_since_jun1()`.
+- `src/components/QuizModal.tsx`: check and surface the insert error.
+
+## Estimated credits
+
+Small — one migration + one file edit + verification curl. ~1 credit block.
