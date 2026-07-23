@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import type { AnalyticsResult, PlayerRow } from './analytics';
+import type { AnalyticsResult, PlayerRow, DailySummary } from './analytics';
 import { retentionRate } from './analytics';
 
 function toSheetRows(players: PlayerRow[]) {
