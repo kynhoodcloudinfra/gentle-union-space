@@ -1,46 +1,38 @@
-## Root cause
+## Goal
 
-Reproduced by POSTing a submission as `anon` against the REST API:
+Add a date-wise analytics section to the Admin → Analytics tab showing one row per IST date since the first submission, plus a downloadable Excel with the same data.
 
-```
-HTTP/2 400
-proxy-status: PostgREST; error=21000
-{"code":"21000","message":"DELETE requires a WHERE clause"}
-```
+## What the user sees
 
-Since day 46 (2026-07-15) there are **zero** rows in `submissions` even though questions 47, 48, 49 have been live. The failure chain:
+In `src/components/admin/AnalyticsTab.tsx`, below the existing single-day metrics/tables, add a new "All Dates" section:
 
-1. Client (`QuizModal.submitAnswer`) inserts into `public.submissions`.
-2. `trg_refresh_players_since_jun1` (AFTER INSERT) calls `public.rebuild_players_since_jun1()`.
-3. That function's first statement is `DELETE FROM public.players_since_jun1;` — no WHERE clause.
-4. Supabase's API-side safeguard aborts the whole transaction with SQLSTATE `21000`.
-5. The INSERT is rolled back. The client code doesn't inspect the error, so the UI shows "Correct!" / result screen using values it computed locally, but nothing is persisted and the leaderboard trigger never runs.
+- Heading with a "Download Excel (All Dates)" button.
+- Scrollable table, one row per IST calendar date (newest first), columns:
+  - Date (IST, YYYY-MM-DD)
+  - Played
+  - New users (first-ever submission that date)
+  - Active streak count (players who played that date with streak ≥ 2 as of that date — see technical note)
+  - Retained (played D-1 AND D)
+  - Retention % (retained / played D-1)
+  - Didn't come back (players with any prior submission who didn't play that date)
 
-That is why 8220850225 (and everyone else) is stuck at their pre-July-15 totals no matter how many correct answers they submit afterwards.
+Excel export writes a single `Daily Summary` sheet with the same columns and filename `paattu-analytics-all-dates-<today>.xlsx`.
 
-## Fix
+## Technical notes
 
-Rewrite `public.rebuild_players_since_jun1()` so it no longer issues an unqualified DELETE. Use `TRUNCATE public.players_since_jun1` (allowed inside a SECURITY DEFINER function and not blocked by the safeguard), then reinsert as today.
+New helper in `src/lib/analytics.ts`:
 
-Also harden the client so this class of silent failure surfaces next time:
+- `getAllDatesAnalytics(): Promise<DailySummary[]>` — pages through all `submissions` once (reuses existing `fetchAllSubmissions`), buckets `submitted_at` into IST calendar dates, then per date computes: played set, new-users set (first-seen date == that date), retained set (intersection with prior date's played set), didn't-come-back count (players with first-seen < date and not in played set).
+- Active-streak-per-date is derived by walking each player's sorted list of distinct IST play-dates and computing the running streak ending on that date; count of players whose streak ≥ 2 on that date.
+- Single pass over submissions → O(N) memory; safe for current volume.
 
-- In `QuizModal.submitAnswer`, capture the `error` from the `submissions` insert and, if present, show a toast and abort instead of rendering a fake result screen.
+New helper in `src/lib/analyticsExport.ts`:
 
-## Backfill
+- `downloadAllDatesExcel(rows: DailySummary[])` — one sheet, same columns as the on-screen table.
 
-After the trigger is fixed, no historical replay is needed for missing scores — users can just play the next active question and the leaderboard will update. Days 47/48/49 are already past; those attempts weren't recorded anywhere, so they can't be reconstructed. Call this out in the reply to the user.
+`AnalyticsTab.tsx` gains state for the all-dates rows, loads them alongside the daily view (same 30s refresh), and renders the table + download button. No schema, RLS, or backend changes.
 
-## Verification
+## Out of scope
 
-1. After the migration, `curl` an insert as anon against `/rest/v1/submissions` → expect 201, row visible in the table.
-2. Confirm `leaderboard.total_score` for the test row's phone jumps by the trigger-computed amount.
-3. Delete the test row.
-
-## Files touched
-
-- Migration: replace body of `public.rebuild_players_since_jun1()`.
-- `src/components/QuizModal.tsx`: check and surface the insert error.
-
-## Estimated credits
-
-Small — one migration + one file edit + verification curl. ~1 credit block.
+- Per-date player lists (user chose summary-only).
+- Date range picker (all-time only).

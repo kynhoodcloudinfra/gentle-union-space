@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import type { AnalyticsResult, PlayerRow } from './analytics';
+import type { AnalyticsResult, PlayerRow, DailySummary } from './analytics';
 import { retentionRate } from './analytics';
 
 function toSheetRows(players: PlayerRow[]) {
@@ -41,4 +41,21 @@ export function downloadAnalyticsExcel(result: AnalyticsResult) {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.didntComeBack)), "Didn't Come Back");
 
   XLSX.writeFile(wb, `paattu-analytics-${result.date}.xlsx`);
+}
+
+export function downloadAllDatesExcel(rows: DailySummary[]) {
+  const wb = XLSX.utils.book_new();
+  const sheet = rows.map(r => ({
+    'Date (IST)': r.date,
+    Played: r.played,
+    'New Users': r.newUsers,
+    'Active Streak (>=2)': r.activeStreak,
+    Retained: r.retained,
+    'Played D-1': r.retentionDenominator,
+    'Retention %': r.retentionRate === null ? 'N/A' : `${r.retentionRate.toFixed(1)}%`,
+    "Didn't Come Back": r.didntComeBack,
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet), 'Daily Summary');
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `paattu-analytics-all-dates-${today}.xlsx`);
 }

@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { cn } from '@/lib/utils';
-import { getDailyAnalytics, retentionRate, type AnalyticsResult, type PlayerRow } from '@/lib/analytics';
-import { downloadAnalyticsExcel } from '@/lib/analyticsExport';
+import { getDailyAnalytics, getAllDatesAnalytics, retentionRate, type AnalyticsResult, type PlayerRow, type DailySummary } from '@/lib/analytics';
+import { downloadAnalyticsExcel, downloadAllDatesExcel } from '@/lib/analyticsExport';
 
 function MetricCard({
   icon: Icon,
@@ -88,6 +88,7 @@ function PlayerTable({ rows }: { rows: PlayerRow[] }) {
 export function AnalyticsTab() {
   const [date, setDate] = useState<Date>(new Date());
   const [data, setData] = useState<AnalyticsResult | null>(null);
+  const [allDates, setAllDates] = useState<DailySummary[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
@@ -99,9 +100,10 @@ export function AnalyticsTab() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const res = await getDailyAnalytics(date);
+      const [res, all] = await Promise.all([getDailyAnalytics(date), getAllDatesAnalytics()]);
       if (reqIdRef.current === id) {
         setData(res);
+        setAllDates(all);
         setUpdatedAt(new Date());
       }
     } catch (e: any) {
@@ -240,6 +242,53 @@ export function AnalyticsTab() {
             </Tabs>
           </div>
         </>
+      )}
+
+      {allDates && allDates.length > 0 && (
+        <div className="mt-8">
+          <div className="flex items-center justify-between">
+            <h3 className="font-serif text-lg text-accent">All Dates</h3>
+            <Button
+              size="sm"
+              onClick={() => downloadAllDatesExcel(allDates)}
+              className="bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
+            >
+              <Download size={14} className="mr-1" />
+              Excel (All Dates)
+            </Button>
+          </div>
+          <OrnamentalDivider className="my-2" />
+          <div className="overflow-auto border border-border rounded-md max-h-[500px]">
+            <table className="w-full text-xs">
+              <thead className="bg-secondary sticky top-0">
+                <tr className="border-b border-border">
+                  <th className="p-2 text-left font-serif">Date (IST)</th>
+                  <th className="p-2 text-right font-serif">Played</th>
+                  <th className="p-2 text-right font-serif">New</th>
+                  <th className="p-2 text-right font-serif">Streak</th>
+                  <th className="p-2 text-right font-serif">Retained</th>
+                  <th className="p-2 text-right font-serif">D-1</th>
+                  <th className="p-2 text-right font-serif">Retention</th>
+                  <th className="p-2 text-right font-serif">Missing</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allDates.map(r => (
+                  <tr key={r.date} className="border-b border-border/50 hover:bg-background/30">
+                    <td className="p-2 font-mono text-foreground">{r.date}</td>
+                    <td className="p-2 text-right font-serif text-accent">{r.played}</td>
+                    <td className="p-2 text-right">{r.newUsers}</td>
+                    <td className="p-2 text-right text-orange-400">{r.activeStreak}</td>
+                    <td className="p-2 text-right">{r.retained}</td>
+                    <td className="p-2 text-right text-muted-foreground">{r.retentionDenominator}</td>
+                    <td className="p-2 text-right">{r.retentionRate === null ? '—' : `${r.retentionRate.toFixed(1)}%`}</td>
+                    <td className="p-2 text-right text-muted-foreground">{r.didntComeBack}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

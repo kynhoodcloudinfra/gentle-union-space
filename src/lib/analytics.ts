@@ -179,3 +179,109 @@ export function retentionRate(r: AnalyticsResult): number | null {
   if (r.retentionDenominator === 0) return null;
   return (r.retained.length / r.retentionDenominator) * 100;
 }
+
+export interface DailySummary {
+  date: string; // YYYY-MM-DD IST
+  played: number;
+  newUsers: number;
+  activeStreak: number;
+  retained: number;
+  retentionDenominator: number;
+  retentionRate: number | null;
+  didntComeBack: number;
+}
+
+function istYmd(iso: string): string {
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const d = new Date(new Date(iso).getTime() + istOffsetMs);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+function addDaysYmd(ymd: string, delta: number): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+export async function getAllDatesAnalytics(): Promise<DailySummary[]> {
+  const subs = await fetchAllSubmissions();
+  if (subs.length === 0) return [];
+
+  // date -> set of phones played that date
+  const playedByDate = new Map<string, Set<string>>();
+  // phone -> sorted unique play dates
+  const datesByPhone = new Map<string, Set<string>>();
+  // phone -> first play date
+  const firstSeen = new Map<string, string>();
+
+  for (const s of subs) {
+    const ymd = istYmd(s.submitted_at);
+    if (!playedByDate.has(ymd)) playedByDate.set(ymd, new Set());
+    playedByDate.get(ymd)!.add(s.phone_number);
+    if (!datesByPhone.has(s.phone_number)) datesByPhone.set(s.phone_number, new Set());
+    datesByPhone.get(s.phone_number)!.add(ymd);
+    const prev = firstSeen.get(s.phone_number);
+    if (!prev || ymd < prev) firstSeen.set(s.phone_number, ymd);
+  }
+
+  // phone -> sorted array of dates
+  const sortedDatesByPhone = new Map<string, string[]>();
+  datesByPhone.forEach((set, phone) => {
+    sortedDatesByPhone.set(phone, [...set].sort());
+  });
+
+  // streak per (phone, date): consecutive days ending at date
+  // Precompute: for each phone, map date -> streak length ending that date
+  const streakByPhoneDate = new Map<string, Map<string, number>>();
+  sortedDatesByPhone.forEach((dates, phone) => {
+    const m = new Map<string, number>();
+    let streak = 0;
+    let prev: string | null = null;
+    for (const d of dates) {
+      if (prev && addDaysYmd(prev, 1) === d) streak += 1;
+      else streak = 1;
+      m.set(d, streak);
+      prev = d;
+    }
+    streakByPhoneDate.set(phone, m);
+  });
+
+  const allDates = [...playedByDate.keys()].sort();
+  const rows: DailySummary[] = [];
+
+  for (const date of allDates) {
+    const played = playedByDate.get(date)!;
+    const prevDate = addDaysYmd(date, -1);
+    const prevPlayed = playedByDate.get(prevDate) ?? new Set<string>();
+
+    let newUsers = 0;
+    let activeStreak = 0;
+    played.forEach(phone => {
+      if (firstSeen.get(phone) === date) newUsers += 1;
+      const s = streakByPhoneDate.get(phone)?.get(date) ?? 0;
+      if (s >= 2) activeStreak += 1;
+    });
+
+    let retained = 0;
+    prevPlayed.forEach(phone => { if (played.has(phone)) retained += 1; });
+
+    let didntComeBack = 0;
+    firstSeen.forEach((fs, phone) => {
+      if (fs < date && !played.has(phone)) didntComeBack += 1;
+    });
+
+    rows.push({
+      date,
+      played: played.size,
+      newUsers,
+      activeStreak,
+      retained,
+      retentionDenominator: prevPlayed.size,
+      retentionRate: prevPlayed.size === 0 ? null : (retained / prevPlayed.size) * 100,
+      didntComeBack,
+    });
+  }
+
+  return rows.reverse(); // newest first
+}
