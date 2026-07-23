@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { cn } from '@/lib/utils';
-import { getDailyAnalytics, retentionRate, type AnalyticsResult, type PlayerRow } from '@/lib/analytics';
-import { downloadAnalyticsExcel } from '@/lib/analyticsExport';
+import { getDailyAnalytics, getAllDatesAnalytics, retentionRate, type AnalyticsResult, type PlayerRow, type DailySummary } from '@/lib/analytics';
+import { downloadAnalyticsExcel, downloadAllDatesExcel } from '@/lib/analyticsExport';
 
 function MetricCard({
   icon: Icon,
