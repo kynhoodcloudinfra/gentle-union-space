@@ -88,6 +88,7 @@ function PlayerTable({ rows }: { rows: PlayerRow[] }) {
 export function AnalyticsTab() {
   const [date, setDate] = useState<Date>(new Date());
   const [data, setData] = useState<AnalyticsResult | null>(null);
+  const [allDates, setAllDates] = useState<DailySummary[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
@@ -99,9 +100,10 @@ export function AnalyticsTab() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const res = await getDailyAnalytics(date);
+      const [res, all] = await Promise.all([getDailyAnalytics(date), getAllDatesAnalytics()]);
       if (reqIdRef.current === id) {
         setData(res);
+        setAllDates(all);
         setUpdatedAt(new Date());
       }
     } catch (e: any) {
