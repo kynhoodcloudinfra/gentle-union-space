@@ -45,6 +45,7 @@ export default function Index() {
   const revealDay = useMemo(() => isRevealDay(), []);
   const postReveal = useMemo(() => isPostReveal(), []);
   const [previousWinner, setPreviousWinner] = useState<WinnerSnapshot | null>(() => loadWinnerSnapshot());
+  const { markPlayed } = useVisitTracker(phoneNumber);
 
   const month = getCurrentMonth();
   const dayNumber = getTodayDayNumber();
