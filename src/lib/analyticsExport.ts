@@ -1,6 +1,35 @@
 import * as XLSX from 'xlsx';
 import type { AnalyticsResult, PlayerRow, DailySummary } from './analytics';
 import { retentionRate } from './analytics';
+import type { TrendBucket } from './trendAnalytics';
+import { formatDuration } from './trendAnalytics';
+
+function trendRow(b: TrendBucket) {
+  return {
+    Period: b.label,
+    'Start (IST)': b.start,
+    'End (IST)': b.end,
+    DAU: b.dau,
+    MAU: b.mau,
+    'Stickiness %': b.stickiness === null ? 'N/A' : `${b.stickiness.toFixed(1)}%`,
+    'Avg New Users / Day': b.avgNewPerDay,
+    'Cumulative Users (till end)': b.cumulativeUsers,
+    'Avg Games / User': b.avgGamesPerUser,
+    'Visitors': b.visited,
+    'Visited but did not play': b.visitedNotPlayed,
+    'Avg Time Spent / User': formatDuration(b.avgTimeSpentSecPerUser),
+    'Visit → Play %': b.visitToPlayPct === null ? 'N/A' : `${b.visitToPlayPct.toFixed(1)}%`,
+  };
+}
+
+export function downloadTrendExcel(weekly: TrendBucket[], monthly: TrendBucket[]) {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weekly.map(trendRow)), 'Weekly Trend');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthly.map(trendRow)), 'Monthly Trend');
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `paattu-trend-analytics-${today}.xlsx`);
+}
+
 
 function toSheetRows(players: PlayerRow[]) {
   return players.map(p => ({
