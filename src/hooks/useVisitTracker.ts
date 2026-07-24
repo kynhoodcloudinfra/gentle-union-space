@@ -32,17 +32,21 @@ export function useVisitTracker(phoneNumber: string | null) {
 
     const flush = () => {
       if (!insertedRef.current) return;
-      const url = `${(supabase as any).supabaseUrl}/rest/v1/visits?session_id=eq.${sessionId}`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/visits?session_id=eq.${sessionId}`;
+      const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const body = JSON.stringify({ last_seen_at: new Date().toISOString() });
-      const headers = {
-        'Content-Type': 'application/json',
-        apikey: (supabase as any).supabaseKey,
-        Authorization: `Bearer ${(supabase as any).supabaseKey}`,
-        Prefer: 'return=minimal',
-      };
       try {
-        // sendBeacon can't set custom headers, so fall back to fetch keepalive.
-        fetch(url, { method: 'PATCH', headers, body, keepalive: true });
+        fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            Prefer: 'return=minimal',
+          },
+          body,
+          keepalive: true,
+        });
       } catch { /* ignore */ }
     };
 
