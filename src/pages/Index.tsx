@@ -18,6 +18,7 @@ import { WinnerRevealCard } from '@/components/WinnerRevealCard';
 import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
 import { WinnerCelebrationModal } from '@/components/WinnerCelebrationModal';
 import { isRevealDay, isPostReveal, loadWinnerSnapshot, saveWinnerSnapshot, type WinnerSnapshot } from '@/lib/dateIST';
+import { useVisitTracker } from '@/hooks/useVisitTracker';
 
 interface LeaderboardEntry {
   phone_number: string;
@@ -44,6 +45,7 @@ export default function Index() {
   const revealDay = useMemo(() => isRevealDay(), []);
   const postReveal = useMemo(() => isPostReveal(), []);
   const [previousWinner, setPreviousWinner] = useState<WinnerSnapshot | null>(() => loadWinnerSnapshot());
+  const { markPlayed } = useVisitTracker(phoneNumber);
 
   const month = getCurrentMonth();
   const dayNumber = getTodayDayNumber();
@@ -395,7 +397,7 @@ export default function Index() {
         <QuizModal
           open={quizOpen}
           onOpenChange={setQuizOpen}
-          onSubmitted={() => { loadData(); checkPlayedToday(); }}
+          onSubmitted={() => { markPlayed(); loadData(); checkPlayedToday(); }}
         />
 
         {iAmWinner && currentWinner && <WinnerCelebrationModal winner={currentWinner} />}

@@ -205,6 +205,33 @@ export type Database = {
           },
         ]
       }
+      visits: {
+        Row: {
+          id: string
+          last_seen_at: string
+          phone_number: string
+          played: boolean
+          session_id: string
+          started_at: string
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string
+          phone_number: string
+          played?: boolean
+          session_id: string
+          started_at?: string
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string
+          phone_number?: string
+          played?: boolean
+          session_id?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
