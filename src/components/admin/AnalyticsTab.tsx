@@ -9,7 +9,8 @@ import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { cn } from '@/lib/utils';
 import { getDailyAnalytics, getAllDatesAnalytics, retentionRate, type AnalyticsResult, type PlayerRow, type DailySummary } from '@/lib/analytics';
-import { downloadAnalyticsExcel, downloadAllDatesExcel } from '@/lib/analyticsExport';
+import { getTrendAnalytics, formatDuration, type TrendBucket } from '@/lib/trendAnalytics';
+import { downloadAnalyticsExcel, downloadAllDatesExcel, downloadTrendExcel } from '@/lib/analyticsExport';
 
 function MetricCard({
   icon: Icon,
