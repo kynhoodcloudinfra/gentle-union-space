@@ -297,6 +297,82 @@ export function AnalyticsTab() {
           </div>
         </div>
       )}
+
+      {trend && (trend.weekly.length > 0 || trend.monthly.length > 0) && (
+        <div className="mt-8">
+          <div className="flex items-center justify-between">
+            <h3 className="font-serif text-lg text-accent">Weekly & Monthly Trends</h3>
+            <Button
+              size="sm"
+              onClick={() => downloadTrendExcel(trend.weekly, trend.monthly)}
+              className="bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
+            >
+              <Download size={14} className="mr-1" />
+              Excel (Trends)
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Visit-based metrics (visitors, time spent, visit→play) start counting from the moment tracking was enabled — earlier periods will show 0 visitors.
+          </p>
+          <OrnamentalDivider className="my-2" />
+          <Tabs defaultValue="weekly">
+            <TabsList className="grid grid-cols-2 bg-background border border-border max-w-xs">
+              <TabsTrigger value="weekly" className="font-serif text-xs">Weekly</TabsTrigger>
+              <TabsTrigger value="monthly" className="font-serif text-xs">Monthly</TabsTrigger>
+            </TabsList>
+            <TabsContent value="weekly" className="mt-3">
+              <TrendTable rows={trend.weekly} />
+            </TabsContent>
+            <TabsContent value="monthly" className="mt-3">
+              <TrendTable rows={trend.monthly} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TrendTable({ rows }: { rows: TrendBucket[] }) {
+  if (rows.length === 0) {
+    return <p className="text-muted-foreground py-6 text-center font-serif text-sm">No data yet.</p>;
+  }
+  return (
+    <div className="overflow-auto border border-border rounded-md max-h-[500px]">
+      <table className="w-full text-xs whitespace-nowrap">
+        <thead className="bg-secondary sticky top-0">
+          <tr className="border-b border-border">
+            <th className="p-2 text-left font-serif">Period</th>
+            <th className="p-2 text-right font-serif" title="Average Daily Active Users">DAU</th>
+            <th className="p-2 text-right font-serif" title="Monthly / period Active Users">MAU</th>
+            <th className="p-2 text-right font-serif" title="DAU / MAU">Stickiness</th>
+            <th className="p-2 text-right font-serif">Avg New / Day</th>
+            <th className="p-2 text-right font-serif" title="Total distinct users up to end of period">Cumulative</th>
+            <th className="p-2 text-right font-serif">Avg Games / User</th>
+            <th className="p-2 text-right font-serif">Visitors</th>
+            <th className="p-2 text-right font-serif" title="Visited but did not play">Visited · No Play</th>
+            <th className="p-2 text-right font-serif">Avg Time / User</th>
+            <th className="p-2 text-right font-serif">Visit → Play</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.key} className="border-b border-border/50 hover:bg-background/30">
+              <td className="p-2 font-mono text-foreground">{r.label}</td>
+              <td className="p-2 text-right text-accent">{r.dau}</td>
+              <td className="p-2 text-right text-accent">{r.mau}</td>
+              <td className="p-2 text-right">{r.stickiness === null ? '—' : `${r.stickiness.toFixed(1)}%`}</td>
+              <td className="p-2 text-right">{r.avgNewPerDay}</td>
+              <td className="p-2 text-right">{r.cumulativeUsers}</td>
+              <td className="p-2 text-right">{r.avgGamesPerUser}</td>
+              <td className="p-2 text-right">{r.visited}</td>
+              <td className="p-2 text-right text-muted-foreground">{r.visitedNotPlayed}</td>
+              <td className="p-2 text-right">{formatDuration(r.avgTimeSpentSecPerUser)}</td>
+              <td className="p-2 text-right">{r.visitToPlayPct === null ? '—' : `${r.visitToPlayPct.toFixed(1)}%`}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
