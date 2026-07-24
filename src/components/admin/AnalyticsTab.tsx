@@ -90,6 +90,7 @@ export function AnalyticsTab() {
   const [date, setDate] = useState<Date>(new Date());
   const [data, setData] = useState<AnalyticsResult | null>(null);
   const [allDates, setAllDates] = useState<DailySummary[] | null>(null);
+  const [trend, setTrend] = useState<{ weekly: TrendBucket[]; monthly: TrendBucket[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
@@ -101,10 +102,15 @@ export function AnalyticsTab() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [res, all] = await Promise.all([getDailyAnalytics(date), getAllDatesAnalytics()]);
+      const [res, all, tr] = await Promise.all([
+        getDailyAnalytics(date),
+        getAllDatesAnalytics(),
+        getTrendAnalytics(),
+      ]);
       if (reqIdRef.current === id) {
         setData(res);
         setAllDates(all);
+        setTrend(tr);
         setUpdatedAt(new Date());
       }
     } catch (e: any) {
