@@ -397,7 +397,7 @@ export default function Index() {
         <QuizModal
           open={quizOpen}
           onOpenChange={setQuizOpen}
-          onSubmitted={() => { loadData(); checkPlayedToday(); }}
+          onSubmitted={() => { markPlayed(); loadData(); checkPlayedToday(); }}
         />
 
         {iAmWinner && currentWinner && <WinnerCelebrationModal winner={currentWinner} />}
