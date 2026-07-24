@@ -18,6 +18,7 @@ import { WinnerRevealCard } from '@/components/WinnerRevealCard';
 import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
 import { WinnerCelebrationModal } from '@/components/WinnerCelebrationModal';
 import { isRevealDay, isPostReveal, loadWinnerSnapshot, saveWinnerSnapshot, type WinnerSnapshot } from '@/lib/dateIST';
+import { useVisitTracker } from '@/hooks/useVisitTracker';
 
 interface LeaderboardEntry {
   phone_number: string;
