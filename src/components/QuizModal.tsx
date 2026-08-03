@@ -1,39 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@/contexts/UserContext';
-
-// Levenshtein distance for fuzzy matching text answers
-function levenshtein(a: string, b: string): number {
-  if (a === b) return 0;
-  if (!a.length) return b.length;
-  if (!b.length) return a.length;
-  const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
-  for (let j = 1; j <= b.length; j++) {
-    let prev = dp[0];
-    dp[0] = j;
-    for (let i = 1; i <= a.length; i++) {
-      const tmp = dp[i];
-      dp[i] = a[i - 1] === b[j - 1] ? prev : Math.min(prev, dp[i], dp[i - 1]) + 1;
-      prev = tmp;
-    }
-  }
-  return dp[a.length];
-}
-
-function normalizeText(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\p{L}\p{N} ]/gu, '');
-}
-
-function fuzzyMatch(user: string, correct: string): boolean {
-  const u = normalizeText(user);
-  const c = normalizeText(correct);
-  if (!u || !c) return false;
-  if (u === c) return true;
-  const dist = levenshtein(u, c);
-  // Allow ~20% typos, minimum 1, max 3
-  const tolerance = Math.min(3, Math.max(1, Math.floor(c.length * 0.2)));
-  return dist <= tolerance;
-}
-
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
@@ -137,12 +103,11 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       if (full) live = { ...live, ...full };
 
       // Has the user already answered this specific question?
-      const { data: existing } = await supabase
-        .from('submissions')
-        .select('*, questions(correct_answer)')
-        .eq('phone_number', phoneNumber!)
-        .eq('question_id', live.id)
-        .maybeSingle();
+      // @ts-ignore — RPC name not in generated types yet
+      const { data: existing } = await supabase.rpc('get_submission_result', {
+        p_phone: phoneNumber!,
+        p_question_id: live.id,
+      }).maybeSingle();
 
       if (existing) {
         const { data: lb } = await supabase
@@ -162,7 +127,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
           score: existing.is_correct ? (isMcqQ ? mcqScore : textScore) : 0,
           totalScore: lb?.total_score ?? 0,
           streak: lb?.streak ?? 0,
-          correctAnswer: live.correct_answer,
+          correctAnswer: existing.correct_answer,
           userAnswer: existing.answer_given ?? '',
           question: live as Question,
         });
@@ -183,26 +148,8 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
     setSubmitting(true);
 
     const month = question.month || getCurrentMonth();
-    const dayNumber = question.day_number;
 
     const timeTaken = Math.max(0, TOTAL_DURATION - remainingSeconds);
-    // MCQ: correct_answer can be either a letter (A/B/C/D) or the option text. Resolve both.
-    const correctNorm = question.correct_answer.toLowerCase().trim();
-    const mcqOptText = (letter: string) => {
-      const k = `option_${letter.toLowerCase()}` as keyof Question;
-      return ((question[k] as string) ?? '').toLowerCase().trim();
-    };
-    const answerNorm = answer.toLowerCase().trim();
-    const mcqCorrectLetter = ['a','b','c','d'].find(l => mcqOptText(l) === correctNorm) ?? correctNorm;
-    const isMcq = question.question_type === 'mcq';
-    const isCorrect = isMcq
-      ? answerNorm === mcqCorrectLetter || mcqOptText(answer) === correctNorm
-      : answer !== '(timed out)' && fuzzyMatch(answer, question.correct_answer);
-    const score = isCorrect
-      ? (isMcq
-          ? (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 100 : 50)
-          : (timeTaken <= 15 ? 150 : timeTaken <= 30 ? 125 : 100))
-      : 0;
 
     // Ensure user has an avatar (first-time players). Never sets score/streak.
     const { data: existingAvatarRow } = await supabase
@@ -222,25 +169,27 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       });
     }
 
-    const { error: submitError } = await supabase.from('submissions').insert({
-      phone_number: phoneNumber,
-      name: displayName,
-      display_name: displayName,
-      kyn_username: kynUsername,
-      question_id: question.id,
-      day_number: dayNumber,
-      answer_given: answer,
-      is_correct: isCorrect,
-      time_taken_seconds: Math.round(timeTaken * 10) / 10,
-      month,
+    // Grading happens server-side now — the client never has (or needs) the
+    // correct answer before this call returns.
+    // @ts-ignore — RPC name not in generated types yet
+    const { data: submitRows, error: submitError } = await supabase.rpc('submit_answer', {
+      p_phone: phoneNumber,
+      p_display_name: displayName,
+      p_kyn_username: kynUsername,
+      p_question_id: question.id,
+      p_answer_given: answer,
+      p_time_taken_seconds: Math.round(timeTaken * 10) / 10,
     });
     if (submitError) {
-      console.error('submission insert failed', submitError);
+      console.error('submit_answer failed', submitError);
       alert(`Could not save your answer: ${submitError.message}. Please try again.`);
       setSubmitting(false);
       return;
     }
-
+    const submitResult = Array.isArray(submitRows) ? submitRows[0] : submitRows;
+    const isCorrect: boolean = submitResult?.is_correct ?? false;
+    const score: number = submitResult?.score ?? 0;
+    const correctAnswer: string = submitResult?.correct_answer ?? question.correct_answer;
 
     // Server-side trigger recomputes leaderboard (score/streak/last_played) from submissions.
     // Read the fresh values back so the result screen matches what other users will see.
@@ -256,7 +205,7 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
       score,
       totalScore: lbRow?.total_score ?? score,
       streak: lbRow?.streak ?? 1,
-      correctAnswer: question.correct_answer,
+      correctAnswer,
       userAnswer: answer,
       question,
     });
@@ -396,23 +345,19 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
                     {(['A', 'B', 'C', 'D'] as const).map(opt => {
                       const text = question[`option_${opt.toLowerCase()}` as keyof Question] as string;
                       if (!text) return null;
-                      const answered = !!selectedAnswer;
-                      const ca = question.correct_answer.toLowerCase().trim();
-                      const isCorrectOpt = ca === opt.toLowerCase() || ca === (text ?? '').toLowerCase().trim();
+                      // Grading now happens server-side (submit_answer RPC), so the
+                      // correct option is no longer known client-side at this point —
+                      // it only appears once `result` comes back and the recap screen
+                      // renders. Just reflect the pending selection here.
                       const isSelected = selectedAnswer === opt;
-                      let stateClass = 'border-border/60 hover:border-accent/60 hover:bg-accent/5';
-                      if (answered && isCorrectOpt) {
-                        stateClass = 'border-green-500 bg-green-500/15 text-green-400';
-                      } else if (answered && isSelected && !isCorrectOpt) {
-                        stateClass = 'border-red-500 bg-red-500/15 text-red-400';
-                      } else if (isSelected) {
-                        stateClass = 'border-accent bg-accent/10';
-                      }
+                      const stateClass = isSelected
+                        ? (submitting ? 'border-accent bg-accent/10 opacity-70' : 'border-accent bg-accent/10')
+                        : 'border-border/60 hover:border-accent/60 hover:bg-accent/5';
                       return (
                         <button
                           key={opt}
                           onClick={() => { setSelectedAnswer(opt); submitAnswer(opt); }}
-                          disabled={submitting || answered}
+                          disabled={submitting || !!selectedAnswer}
                           className={`w-full text-left px-3 py-2.5 rounded-md border text-sm transition-all ${stateClass} disabled:opacity-90 flex items-center gap-2.5`}
                         >
                           <span className="text-accent font-serif text-base w-5 shrink-0">{opt}.</span>

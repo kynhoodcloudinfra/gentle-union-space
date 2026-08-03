@@ -7,26 +7,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionsTab } from '@/components/admin/QuestionsTab';
 import { LeaderboardTab } from '@/components/admin/LeaderboardTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
-
-const ADMIN_PASSWORD = 'rajaadmin123';
+import { getAdminPassword, setAdminPassword, verifyAdminPassword } from '@/lib/adminApi';
 
 export default function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem('raja_admin') === 'true') setAuthenticated(true);
+    const stored = getAdminPassword();
+    if (!stored) return;
+    verifyAdminPassword(stored).then(
+      () => setAuthenticated(true),
+      () => {}, // stored password no longer valid — stay on the login screen
+    );
   }, []);
 
   const [error, setError] = useState('');
 
-  const handleLogin = (e?: React.FormEvent) => {
+  const handleLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('raja_admin', 'true');
+    setChecking(true);
+    setError('');
+    try {
+      await verifyAdminPassword(password);
+      setAdminPassword(password);
       setAuthenticated(true);
-    } else {
+    } catch {
       setError('Incorrect password');
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -60,8 +70,8 @@ export default function Admin() {
               autoFocus
             />
             {error && <p className="text-xs text-destructive mb-2">{error}</p>}
-            <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
-              Enter
+            <Button type="submit" disabled={checking} className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-serif">
+              {checking ? 'Checking…' : 'Enter'}
             </Button>
           </form>
         </div>

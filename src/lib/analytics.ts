@@ -1,3 +1,4 @@
+import { adminSelect } from '@/lib/adminApi';
 import { supabase } from '@/lib/supabase';
 
 export interface PlayerRow {
@@ -47,12 +48,11 @@ async function fetchAllSubmissions(): Promise<Array<{ phone_number: string; subm
   const rows: Array<{ phone_number: string; submitted_at: string }> = [];
   let from = 0;
   for (;;) {
-    const { data, error } = await supabase
-      .from('submissions')
-      .select('phone_number, submitted_at')
-      .order('submitted_at', { ascending: true })
-      .range(from, from + pageSize - 1);
-    if (error) throw error;
+    const data = await adminSelect<{ phone_number: string; submitted_at: string }>('submissions', {
+      columns: 'phone_number, submitted_at',
+      order: { column: 'submitted_at', ascending: true },
+      range: [from, from + pageSize - 1],
+    });
     if (!data || data.length === 0) break;
     rows.push(...data);
     if (data.length < pageSize) break;

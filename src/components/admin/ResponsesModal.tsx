@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
-import { supabase } from '@/lib/supabase';
+import { adminSelect } from '@/lib/adminApi';
 
 interface Submission {
   id: string;
@@ -29,15 +29,14 @@ export function ResponsesModal({ questionId, questionText, open, onOpenChange }:
   useEffect(() => {
     if (!open || !questionId) return;
     setLoading(true);
-    supabase
-      .from('submissions')
-      .select('id, display_name, name, kyn_username, phone_number, answer_given, is_correct, time_taken_seconds, submitted_at')
-      .eq('question_id', questionId)
-      .order('time_taken_seconds', { ascending: true, nullsFirst: false })
-      .then(({ data }) => {
-        setRows(data ?? []);
-        setLoading(false);
-      });
+    adminSelect<Submission>('submissions', {
+      columns: 'id, display_name, name, kyn_username, phone_number, answer_given, is_correct, time_taken_seconds, submitted_at',
+      eq: [{ column: 'question_id', value: questionId }],
+      order: { column: 'time_taken_seconds', ascending: true, nullsFirst: false },
+    }).then(
+      data => { setRows(data); setLoading(false); },
+      () => { setRows([]); setLoading(false); },
+    );
   }, [open, questionId]);
 
   const correctCount = rows.filter(r => r.is_correct).length;

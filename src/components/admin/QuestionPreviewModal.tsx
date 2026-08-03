@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { supabase } from '@/lib/supabase';
+import { adminUpdate } from '@/lib/adminApi';
 import { toast } from '@/hooks/use-toast';
 import { Lock } from 'lucide-react';
 
@@ -53,9 +54,8 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
   async function save() {
     if (!form) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('questions')
-      .update({
+    try {
+      await adminUpdate('questions', {
         question_text: form.question_text,
         option_a: form.option_a,
         option_b: form.option_b,
@@ -64,13 +64,13 @@ export function QuestionPreviewModal({ question, open, onOpenChange, onSaved }: 
         correct_answer: form.correct_answer,
         question_type: form.question_type,
         image_url: form.image_url || null,
-      } as any)
-      .eq('id', form.id);
-    setSaving(false);
-    if (error) {
-      toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+      }, { eq: [{ column: 'id', value: form.id }] });
+    } catch (err: any) {
+      setSaving(false);
+      toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
       return;
     }
+    setSaving(false);
     toast({ title: 'Question updated' });
     setEditing(false);
     onSaved?.();

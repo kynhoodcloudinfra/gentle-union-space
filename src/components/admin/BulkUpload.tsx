@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { adminInsert } from '@/lib/adminApi';
 import { downloadSampleXlsx, type QuestionRow } from '@/lib/sampleXlsx';
 import { Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -67,12 +67,14 @@ export function BulkUpload({ onSaved }: Props) {
         image_url: r.image_url?.trim() || null,
       };
     });
-    const { error } = await supabase.from('questions').insert(payload as any);
-    setSaving(false);
-    if (error) {
-      toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+    try {
+      await adminInsert('questions', payload as any);
+    } catch (err: any) {
+      setSaving(false);
+      toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
       return;
     }
+    setSaving(false);
     toast({ title: `Added ${parsedRows.length} questions` });
     setParsedRows([]);
     onSaved?.();

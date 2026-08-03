@@ -95,11 +95,9 @@ export default function Index() {
       setPlayedToday(false);
       return;
     }
+    // @ts-ignore — RPC name not in generated types yet
     const { data } = await supabase
-      .from('submissions')
-      .select('id')
-      .eq('phone_number', phoneNumber)
-      .eq('question_id', liveQ.id)
+      .rpc('get_submission_result', { p_phone: phoneNumber, p_question_id: liveQ.id })
       .maybeSingle();
     setPlayedToday(!!data);
   }

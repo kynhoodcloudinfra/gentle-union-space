@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { adminSelect } from '@/lib/adminApi';
 
 export interface TrendBucket {
   key: string;          // e.g. "2026-W30" or "2026-07"
@@ -62,15 +62,14 @@ function monthKey(ymd: string) {
   return { key: `${y}-${String(m).padStart(2, '0')}`, first, last: lastYmd };
 }
 
-async function fetchAll<T>(table: string, columns: string): Promise<T[]> {
+async function fetchAll<T>(table: 'submissions' | 'visits', columns: string): Promise<T[]> {
   const pageSize = 1000;
   const rows: T[] = [];
   let from = 0;
   for (;;) {
-    const { data, error } = await supabase.from(table as any).select(columns).range(from, from + pageSize - 1);
-    if (error) throw error;
+    const data = await adminSelect<T>(table, { columns, range: [from, from + pageSize - 1] });
     if (!data || data.length === 0) break;
-    rows.push(...(data as T[]));
+    rows.push(...data);
     if (data.length < pageSize) break;
     from += pageSize;
   }

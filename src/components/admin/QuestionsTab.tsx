@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { supabase } from '@/lib/supabase';
+import { adminSelect, adminInsert, adminUpdate, adminDelete } from '@/lib/adminApi';
 import { Eye, BarChart3, Trash2, Plus, Lock, Play, Pause, Clock } from 'lucide-react';
 import { BulkUpload } from './BulkUpload';
 import { QuestionPreviewModal, type QuestionRecord } from './QuestionPreviewModal';
@@ -48,20 +49,24 @@ export function QuestionsTab() {
   const [scheduleValue, setScheduleValue] = useState('');
 
   async function loadQuestions() {
-    const { data: qs } = await supabase
-      .from('questions')
-      .select('*')
-      .order('is_active', { ascending: false })
-      .order('activated_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false });
-    setQuestions((qs ?? []) as QuestionRecord[]);
+    // Admin needs to see correct_answer, which is deliberately hidden from the
+    // public anon key — this goes through the password-gated admin-db function.
+    const qs = await adminSelect<QuestionRecord>('questions', { columns: '*' });
+    const sorted = [...qs].sort((a, b) => {
+      if (!!b.is_active !== !!a.is_active) return (b.is_active ? 1 : 0) - (a.is_active ? 1 : 0);
+      const aAct = a.activated_at ? new Date(a.activated_at).getTime() : -Infinity;
+      const bAct = b.activated_at ? new Date(b.activated_at).getTime() : -Infinity;
+      if (bAct !== aAct) return bAct - aAct;
+      const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bCreated = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bCreated - aCreated;
+    });
+    setQuestions(sorted);
 
-    if (qs && qs.length) {
-      const { data: subs } = await supabase
-        .from('submissions')
-        .select('question_id');
+    if (sorted.length) {
+      const subs = await adminSelect<{ question_id: string }>('submissions', { columns: 'question_id' });
       const counts: Record<string, number> = {};
-      (subs ?? []).forEach(s => {
+      subs.forEach(s => {
         counts[s.question_id] = (counts[s.question_id] ?? 0) + 1;
       });
       setSubmissionCounts(counts);
@@ -78,12 +83,14 @@ export function QuestionsTab() {
     const payload = form.question_type === 'text'
       ? { ...base, option_a: null, option_b: null, option_c: null, option_d: null }
       : base;
-    const { error } = await supabase.from('questions').insert(payload as any);
-    setLoading(false);
-    if (error) {
-      toast({ title: 'Failed to add', description: error.message, variant: 'destructive' });
+    try {
+      await adminInsert('questions', payload as any);
+    } catch (err: any) {
+      setLoading(false);
+      toast({ title: 'Failed to add', description: err.message, variant: 'destructive' });
       return;
     }
+    setLoading(false);
     toast({ title: 'Question added to pool' });
     setForm({ ...blankForm });
     setShowAddForm(false);
@@ -100,39 +107,36 @@ export function QuestionsTab() {
       return;
     }
     if (!confirm('Delete this question?')) return;
-    await supabase.from('questions').delete().eq('id', q.id);
+    await adminDelete('questions', [{ column: 'id', value: q.id }]);
     loadQuestions();
   }
 
   async function activateQuestion(q: QuestionRecord) {
-    // Deactivate any currently live question first
-    const { data: liveQs } = await supabase.from('questions').select('id').eq('is_active', true);
-    if (liveQs && liveQs.length > 0) {
+    // Deactivate any currently live question first (using already-loaded state
+    // instead of a fresh query — avoids a redundant admin-db round trip).
+    const liveQs = questions.filter(r => r.is_active);
+    if (liveQs.length > 0) {
       if (!confirm('A question is currently live. Deactivate it and make this one live now?')) return;
-      await supabase.from('questions').update({ is_active: false }).in('id', liveQs.map(r => r.id));
+      await adminUpdate('questions', { is_active: false }, { in: { column: 'id', values: liveQs.map(r => r.id) } });
     } else {
       if (!confirm('Make this question live now? It will run for 24 hours.')) return;
     }
     const now = new Date();
     const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const { data: maxRow } = await supabase
-      .from('questions')
-      .select('day_number')
-      .order('day_number', { ascending: false, nullsFirst: false })
-      .limit(1)
-      .maybeSingle();
-    const nextDay = (maxRow?.day_number ?? 0) + 1;
-    const { error } = await supabase.from('questions').update({
-      is_active: true,
-      has_been_live: true,
-      activated_at: now.toISOString(),
-      expires_at: expires.toISOString(),
-      scheduled_for: null,
-      day_number: q.day_number ?? nextDay,
-      month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
-    }).eq('id', q.id);
-    if (error) {
-      toast({ title: 'Activation failed', description: error.message, variant: 'destructive' });
+    const maxDayNumber = questions.reduce((max, r) => Math.max(max, r.day_number ?? 0), 0);
+    const nextDay = maxDayNumber + 1;
+    try {
+      await adminUpdate('questions', {
+        is_active: true,
+        has_been_live: true,
+        activated_at: now.toISOString(),
+        expires_at: expires.toISOString(),
+        scheduled_for: null,
+        day_number: q.day_number ?? nextDay,
+        month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+      }, { eq: [{ column: 'id', value: q.id }] });
+    } catch (err: any) {
+      toast({ title: 'Activation failed', description: err.message, variant: 'destructive' });
       return;
     }
     toast({ title: 'Question is now live' });
@@ -141,12 +145,13 @@ export function QuestionsTab() {
 
   async function deactivateQuestion(q: QuestionRecord) {
     if (!confirm('Deactivate this question? It will be marked expired.')) return;
-    const { error } = await supabase.from('questions').update({
-      is_active: false,
-      expires_at: new Date().toISOString(),
-    }).eq('id', q.id);
-    if (error) {
-      toast({ title: 'Deactivation failed', description: error.message, variant: 'destructive' });
+    try {
+      await adminUpdate('questions', {
+        is_active: false,
+        expires_at: new Date().toISOString(),
+      }, { eq: [{ column: 'id', value: q.id }] });
+    } catch (err: any) {
+      toast({ title: 'Deactivation failed', description: err.message, variant: 'destructive' });
       return;
     }
     toast({ title: 'Question deactivated' });
@@ -166,9 +171,10 @@ export function QuestionsTab() {
   async function saveSchedule() {
     if (!scheduleQ) return;
     const iso = scheduleValue ? new Date(scheduleValue).toISOString() : null;
-    const { error } = await supabase.from('questions').update({ scheduled_for: iso }).eq('id', scheduleQ.id);
-    if (error) {
-      toast({ title: 'Schedule failed', description: error.message, variant: 'destructive' });
+    try {
+      await adminUpdate('questions', { scheduled_for: iso }, { eq: [{ column: 'id', value: scheduleQ.id }] });
+    } catch (err: any) {
+      toast({ title: 'Schedule failed', description: err.message, variant: 'destructive' });
       return;
     }
     toast({ title: iso ? 'Question scheduled' : 'Schedule cleared' });
@@ -178,7 +184,7 @@ export function QuestionsTab() {
 
   async function clearSchedule() {
     if (!scheduleQ) return;
-    await supabase.from('questions').update({ scheduled_for: null }).eq('id', scheduleQ.id);
+    await adminUpdate('questions', { scheduled_for: null }, { eq: [{ column: 'id', value: scheduleQ.id }] });
     toast({ title: 'Schedule cleared' });
     setScheduleQ(null);
     loadQuestions();
