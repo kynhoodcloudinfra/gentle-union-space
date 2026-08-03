@@ -82,10 +82,15 @@ export default {
             height: "0",
           },
         },
+        "cta-pulse": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(var(--accent) / 0.45)" },
+          "50%": { boxShadow: "0 0 0 10px hsl(var(--accent) / 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "cta-pulse": "cta-pulse 2s ease-out infinite",
       },
     },
   },

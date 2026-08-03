@@ -6,15 +6,17 @@ import { Button } from '@/components/ui/button';
 import { AvatarDisplay } from './AvatarDisplay';
 import { OrnamentalDivider } from './OrnamentalDivider';
 import { avatarMap } from '@/lib/avatars';
-import { LogOut, Upload, Image as ImageIcon, Check } from 'lucide-react';
+import { LogOut, Upload, Image as ImageIcon, Check, Sparkles, Flame } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ProfileSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  totalScore?: number;
+  streak?: number;
 }
 
-export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
+export function ProfileSheet({ open, onOpenChange, totalScore = 0, streak = 0 }: ProfileSheetProps) {
   const {
     phoneNumber, displayName, kynUsername, avatarId, profileImageUrl,
     setAvatarId, setProfileImage, logout,
@@ -65,6 +67,20 @@ export function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
           <p className="font-serif text-2xl text-accent gold-glow mt-3">{displayName || '—'}</p>
           {kynUsername && (
             <p className="text-sm text-muted-foreground mt-1">@{kynUsername}</p>
+          )}
+        </div>
+
+        <div className="mt-5 bg-gradient-to-br from-accent/15 via-accent/5 to-transparent border border-accent/30 rounded-2xl p-4 text-center">
+          <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-1">Your Points Are Safe</p>
+          <div className="flex items-center justify-center gap-2">
+            <Sparkles size={22} className="text-accent" />
+            <span className="font-serif text-3xl text-accent gold-glow">{totalScore}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">points earned so far</p>
+          {streak > 0 && (
+            <p className="flex items-center justify-center gap-1 text-xs text-orange-400/90 mt-2">
+              <Flame size={12} /> {streak} day streak
+            </p>
           )}
         </div>
 

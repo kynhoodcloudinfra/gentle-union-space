@@ -10,9 +10,9 @@ import { QuizModal } from '@/components/QuizModal';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
-import { Music, Flame, Sparkles, Play, Check, ChevronDown, Info, Gift } from 'lucide-react';
+import { Music, Flame, Sparkles, Play, Check, Gift, Lock } from 'lucide-react';
 import devaConcertPoster from '@/assets/deva-concert.jpeg.asset.json';
 import { WinnerRevealCard } from '@/components/WinnerRevealCard';
 import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
@@ -40,7 +40,6 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [playedToday, setPlayedToday] = useState(false);
   const revealDay = useMemo(() => isRevealDay(), []);
   const postReveal = useMemo(() => isPostReveal(), []);
@@ -160,11 +159,6 @@ export default function Index() {
   const meAvatarId = ctxAvatarId ?? me?.avatar_id ?? null;
   const meProfileImage = ctxProfileImage ?? me?.profile_image_url ?? null;
 
-  const myRank = useMemo(
-    () => phoneNumber ? data.findIndex(e => e.phone_number === phoneNumber) + 1 : 0,
-    [data, phoneNumber]
-  );
-
   if (authStatus === 'loading' || authStatus === 'checking_membership') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -176,12 +170,6 @@ export default function Index() {
   if (authStatus === 'unauthenticated') return <MobileNumberPrompt />;
 
   if (isCommunityMember === false) return <CommunityGatePopup />;
-
-  const visible = showAll ? data : data.slice(0, 10);
-  const hasPodium = data.length >= 3;
-  const podium = hasPodium ? data.slice(0, 3) : [];
-  const rest = hasPodium ? visible.slice(3) : visible;
-  const meInVisible = me && visible.some(e => e.phone_number === me.phone_number);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -314,72 +302,21 @@ export default function Index() {
           )}
 
 
-          {/* Leaderboard heading + legend */}
-          <div className="flex items-center justify-between mb-3 px-1">
-            <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-serif">Leaderboard</p>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-accent transition-colors">
-                  <Info size={12} /> How it works
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-[240px] text-xs">
-                <p className="font-serif text-accent mb-1">Points</p>
-                <p className="mb-1.5">Points are something you accumulate by playing the games.</p>
-                <p className="font-serif text-accent mb-1">Streak 🔥</p>
-                <p>Consecutive days you've played the riddle.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <Music size={32} className="text-accent/40 mx-auto animate-spin" />
-              <p className="text-muted-foreground mt-3 text-sm font-serif">Loading…</p>
-            </div>
-          ) : data.length === 0 ? (
-            <div className="text-center py-12 bg-card/50 border border-border rounded-xl">
-              <Music size={40} className="text-accent/20 mx-auto mb-3" />
-              <p className="text-muted-foreground font-serif">No entries yet — be the first maestro!</p>
-            </div>
-          ) : (
-            <>
-              {/* Podium */}
-              {hasPodium && <Podium podium={podium} />}
-
-              {/* List */}
-              <div className="space-y-1.5">
-                {rest.map((entry, i) => {
-                  const rank = hasPodium ? i + 4 : i + 1;
-                  const isUser = entry.phone_number === phoneNumber;
-                  return <LeaderRow key={entry.phone_number} entry={entry} rank={rank} isUser={isUser} />;
-                })}
-              </div>
-
-              {/* User outside visible list */}
-              {!meInVisible && me && myRank > 0 && (
-                <>
-                  <div className="flex items-center gap-2 justify-center text-muted-foreground py-2">
-                    <div className="w-1 h-1 rounded-full bg-accent/40" />
-                    <div className="w-1 h-1 rounded-full bg-accent/40" />
-                    <div className="w-1 h-1 rounded-full bg-accent/40" />
-                  </div>
-                  <LeaderRow entry={me} rank={myRank} isUser />
-                </>
-              )}
-
-              {/* View all toggle */}
-              {data.length > 10 && (
-                <button
-                  onClick={() => setShowAll(s => !s)}
-                  className="w-full mt-4 py-2.5 rounded-lg border border-accent/30 bg-card/40 hover:bg-card text-accent font-serif text-sm transition-colors flex items-center justify-center gap-2"
-                >
-                  {showAll ? 'Show top 10' : `View all (${data.length})`}
-                  <ChevronDown size={14} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-            </>
-          )}
+          {/* Leaderboard is paused while we roll out the new look — points are
+              preserved, just tucked into the profile instead. */}
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="w-full bg-gradient-to-br from-accent/15 via-card to-card border border-accent/30 rounded-2xl p-5 text-center group hover:border-accent/60 transition-all"
+          >
+            <Lock size={20} className="mx-auto text-accent mb-2" />
+            <p className="font-serif text-lg text-accent gold-glow">Your Points Are Safe</p>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              We're refreshing the leaderboard experience. Tap here to see how many points you've earned so far.
+            </p>
+            <span className="inline-flex items-center gap-1.5 mt-3 text-xs font-serif text-accent border border-accent/40 rounded-full px-3 py-1.5 group-hover:bg-accent/10 transition-colors">
+              <Sparkles size={12} /> View My Points
+            </span>
+          </button>
 
           <div className="mt-8 flex flex-col items-center gap-1">
             <p className="text-muted-foreground/40 text-[10px] font-serif italic text-center">
@@ -391,7 +328,12 @@ export default function Index() {
         {/* First-time display name prompt */}
         {isFirstTime && <DisplayNamePrompt />}
 
-        <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
+        <ProfileSheet
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+          totalScore={me?.total_score ?? 0}
+          streak={me?.streak ?? 0}
+        />
         <QuizModal
           open={quizOpen}
           onOpenChange={setQuizOpen}
@@ -401,111 +343,5 @@ export default function Index() {
         {iAmWinner && currentWinner && <WinnerCelebrationModal winner={currentWinner} />}
       </div>
     </TooltipProvider>
-  );
-}
-
-/* ------- subcomponents ------- */
-
-function Podium({ podium }: { podium: LeaderboardEntry[] }) {
-  return (
-    <div className="relative mb-5">
-      {/* Brass ring backdrop */}
-      <div className="absolute inset-x-0 -top-2 h-32 bg-[radial-gradient(ellipse_at_center,hsl(30,30%,72%,0.12),transparent_70%)] pointer-events-none" />
-
-      <div className="flex items-end justify-center gap-2 relative">
-        <PodiumPlace entry={podium[1]} rank={2} />
-        <PodiumPlace entry={podium[0]} rank={1} />
-        <PodiumPlace entry={podium[2]} rank={3} />
-      </div>
-
-      {/* Vinyl-record platform */}
-      <div className="mt-2 mx-auto w-full max-w-[280px] h-3 rounded-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-      <div className="mx-auto w-full max-w-[200px] h-2 rounded-full bg-gradient-to-r from-transparent via-accent/15 to-transparent mt-0.5" />
-    </div>
-  );
-}
-
-function PodiumPlace({ entry, rank }: { entry: LeaderboardEntry; rank: 1 | 2 | 3 }) {
-  const isFirst = rank === 1;
-  const sizes = isFirst ? 'w-20' : 'w-16';
-  const avatarSize = isFirst ? 64 : 48;
-  const heights = { 1: 'h-24', 2: 'h-16', 3: 'h-12' } as const;
-  const tones = {
-    1: 'from-[hsl(40,55%,55%)] to-[hsl(35,50%,38%)] border-[hsl(40,55%,65%)]',
-    2: 'from-[hsl(0,8%,72%)] to-[hsl(0,5%,55%)] border-[hsl(0,8%,80%)]',
-    3: 'from-[hsl(20,45%,48%)] to-[hsl(20,40%,32%)] border-[hsl(20,45%,55%)]',
-  } as const;
-
-  return (
-    <div className={`flex flex-col items-center ${sizes}`}>
-      {/* Crest above #1 — refined laurel-style instead of cartoon crown */}
-      {isFirst && (
-        <svg width="34" height="20" viewBox="0 0 34 20" className="mb-0.5">
-          <defs>
-            <linearGradient id="crest" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="hsl(40,70%,68%)" />
-              <stop offset="100%" stopColor="hsl(35,55%,42%)" />
-            </linearGradient>
-          </defs>
-          <path d="M2 18 L8 4 L13 14 L17 2 L21 14 L26 4 L32 18 Z" fill="url(#crest)" stroke="hsl(35,40%,30%)" strokeWidth="0.6" strokeLinejoin="round" />
-          <circle cx="8" cy="4" r="1.4" fill="hsl(40,70%,75%)" />
-          <circle cx="17" cy="2" r="1.6" fill="hsl(40,70%,80%)" />
-          <circle cx="26" cy="4" r="1.4" fill="hsl(40,70%,75%)" />
-        </svg>
-      )}
-
-      <AvatarDisplay
-        avatarId={entry.avatar_id}
-        imageUrl={entry.profile_image_url}
-        seed={entry.phone_number}
-        size={avatarSize}
-        className={isFirst ? 'ring-2 ring-[hsl(40,55%,55%)] shadow-lg shadow-accent/20' : 'ring-2 ring-accent/30'}
-      />
-      <p className="text-[11px] text-foreground mt-1 truncate w-full text-center font-serif">
-        {entry.display_name ?? entry.name}
-      </p>
-      {entry.kyn_username && (
-        <p className="text-[9px] text-muted-foreground truncate w-full text-center">@{entry.kyn_username}</p>
-      )}
-
-      <div className={`mt-1 w-full rounded-t-md bg-gradient-to-b ${tones[rank]} border-x border-t ${heights[rank]} flex flex-col items-center justify-center px-1`}>
-        <span className="font-serif font-bold text-base text-[hsl(0,20%,12%)]">{rank}</span>
-        <span className="font-serif text-xs text-[hsl(0,20%,12%)]/85">{entry.total_score}</span>
-      </div>
-    </div>
-  );
-}
-
-function LeaderRow({ entry, rank, isUser }: { entry: LeaderboardEntry; rank: number; isUser: boolean }) {
-  return (
-    <div
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all ${
-        isUser
-          ? 'border-accent bg-accent/10 shadow-sm shadow-accent/10'
-          : 'border-border/60 bg-card/60 hover:bg-card'
-      }`}
-    >
-      <span className="w-6 text-center font-serif text-accent text-sm">{rank}</span>
-      <AvatarDisplay
-        avatarId={entry.avatar_id}
-        imageUrl={entry.profile_image_url}
-        seed={entry.phone_number}
-        size={32}
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-foreground truncate text-sm font-serif leading-tight">
-          {entry.display_name ?? entry.name}
-        </p>
-        {entry.kyn_username && (
-          <p className="text-[10px] text-muted-foreground truncate leading-tight">@{entry.kyn_username}</p>
-        )}
-      </div>
-      {entry.streak > 0 && (
-        <span className="flex items-center gap-0.5 text-xs text-orange-400/90">
-          <Flame size={11} /> {entry.streak}
-        </span>
-      )}
-      <span className="font-serif text-accent text-sm w-10 text-right">{entry.total_score}</span>
-    </div>
   );
 }

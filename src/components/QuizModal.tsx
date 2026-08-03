@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@/contexts/UserContext';
+import { Sparkles, MessageCircle } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FilmStripTimer } from './FilmStripTimer';
 import { OrnamentalDivider } from './OrnamentalDivider';
@@ -315,10 +316,36 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
               );
             })()
           ) : !question ? (
-            <div className="text-center py-8">
-              <h3 className="font-serif text-xl text-accent mb-2">No Puzzle Available</h3>
-              <p className="text-muted-foreground text-sm mb-4">All questions have been played. Check back soon!</p>
-              <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
+            <div className="text-center py-6 px-1">
+              <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
+                <Sparkles size={28} className="text-accent animate-pulse" />
+              </div>
+              <h3 className="font-serif text-2xl text-accent gold-glow mb-2">Something New Is Coming</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                We're giving Paattu Puzzle a fresh new look — with new rewards and new ways to play.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-1.5 mb-5">
+                Stay tuned. We'll be back very soon.
+              </p>
+
+              <OrnamentalDivider className="mb-5" />
+
+              <p className="text-xs text-muted-foreground mb-3">
+                Got an idea for a reward, feature, or question? We'd love to hear it.
+              </p>
+              <a
+                href="https://wa.me/918220850225?text=Hey!%20I%20have%20a%20suggestion%20for%20Paattu%20Puzzle%3A%20"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground font-serif text-sm px-5 py-2.5 shadow-lg shadow-accent/20 animate-cta-pulse hover:scale-105 transition-transform"
+              >
+                <MessageCircle size={16} />
+                Share Your Suggestion
+              </a>
+
+              <div className="mt-6">
+                <Button onClick={() => onOpenChange(false)} variant="outline" size="sm">Close</Button>
+              </div>
             </div>
           ) : (
             <>
