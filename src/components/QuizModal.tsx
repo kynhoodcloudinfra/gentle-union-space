@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { supabase, getCurrentMonth } from '@/lib/supabase';
 import { getRandomAvatarId } from '@/lib/avatars';
+import { COMING_SOON_MODE } from '@/lib/relaunch';
 
 interface Question {
   id: string;
@@ -81,6 +82,11 @@ export function QuizModal({ open, onOpenChange, onSubmitted }: QuizModalProps) {
 
   async function loadQuestion() {
     setLoading(true);
+    if (COMING_SOON_MODE) {
+      setQuestion(null);
+      setLoading(false);
+      return;
+    }
     try {
       // Atomically rotate (expire stale + activate next if needed) and return current live question
       // @ts-ignore — RPC name not in generated types yet

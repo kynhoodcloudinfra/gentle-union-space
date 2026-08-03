@@ -19,6 +19,7 @@ import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
 import { WinnerCelebrationModal } from '@/components/WinnerCelebrationModal';
 import { isRevealDay, isPostReveal, loadWinnerSnapshot, saveWinnerSnapshot, type WinnerSnapshot } from '@/lib/dateIST';
 import { useVisitTracker } from '@/hooks/useVisitTracker';
+import { COMING_SOON_MODE } from '@/lib/relaunch';
 
 interface LeaderboardEntry {
   phone_number: string;
@@ -231,7 +232,23 @@ export default function Index() {
           </div>
 
           {/* Play CTA — prominent */}
-          {playedToday ? (
+          {COMING_SOON_MODE ? (
+            <button
+              onClick={() => setQuizOpen(true)}
+              className="w-full bg-gradient-to-br from-[hsl(345,55%,28%)] via-[hsl(0,55%,22%)] to-[hsl(0,55%,15%)] border border-accent/40 rounded-2xl p-5 mb-6 film-grain text-left relative overflow-hidden group hover:border-accent transition-all hover:shadow-lg hover:shadow-accent/20"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(30,30%,72%,0.15),transparent_60%)] pointer-events-none" />
+              <div className="flex items-center gap-4 relative">
+                <div className="w-14 h-14 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center group-hover:bg-accent/30 transition-colors">
+                  <Sparkles size={22} className="text-accent" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-serif text-xl text-accent gold-glow">New Season Coming Soon</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">New look, new rewards — tap to see what's next</p>
+                </div>
+              </div>
+            </button>
+          ) : playedToday ? (
             <div className="bg-gradient-to-br from-[hsl(0,45%,22%)] to-[hsl(0,55%,15%)] border border-accent/30 rounded-2xl p-4 mb-6 film-grain text-center">
               <Check size={28} className="mx-auto text-accent mb-1" />
               <p className="font-serif text-base text-accent">Today's Puzzle Done</p>
