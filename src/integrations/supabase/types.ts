@@ -237,6 +237,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      daitch_mokotoff: { Args: { "": string }; Returns: string[] }
+      dmetaphone: { Args: { "": string }; Returns: string }
+      dmetaphone_alt: { Args: { "": string }; Returns: string }
+      get_submission_result: {
+        Args: { p_phone: string; p_question_id: string }
+        Returns: {
+          answer_given: string
+          correct_answer: string
+          is_correct: boolean
+          time_taken_seconds: number
+        }[]
+      }
       rebuild_players_since_jun1: { Args: never; Returns: undefined }
       recompute_leaderboard_all: { Args: never; Returns: undefined }
       recompute_leaderboard_for: {
@@ -247,11 +259,9 @@ export type Database = {
         Args: never
         Returns: {
           activated_at: string
-          correct_answer: string
           day_number: number
           expires_at: string
           id: string
-          image_url: string
           month: string
           option_a: string
           option_b: string
@@ -261,6 +271,23 @@ export type Database = {
           question_type: string
         }[]
       }
+      soundex: { Args: { "": string }; Returns: string }
+      submit_answer: {
+        Args: {
+          p_answer_given: string
+          p_display_name: string
+          p_kyn_username: string
+          p_phone: string
+          p_question_id: string
+          p_time_taken_seconds: number
+        }
+        Returns: {
+          correct_answer: string
+          is_correct: boolean
+          score: number
+        }[]
+      }
+      text_soundex: { Args: { "": string }; Returns: string }
       update_leaderboard_identity: {
         Args: {
           p_avatar_id?: number
