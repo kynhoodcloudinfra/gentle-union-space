@@ -1,4 +1,3 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 // Generic, password-gated proxy for the admin panel. The panel has no real
@@ -10,6 +9,17 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 //
 // Only these tables may be touched, and only via the actions below.
 const ALLOWED_TABLES = new Set(['questions', 'submissions', 'visits']);
+
+// The shared supabase-js corsHeaders helper only allows a fixed set of
+// headers (authorization, apikey, content-type, x-client-info, x-retry-count)
+// — it doesn't know about our custom x-admin-password header, so browsers
+// block the preflight and every real request fails with a generic "Failed to
+// fetch" (curl bypasses CORS entirely, so this was invisible there).
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-retry-count, x-admin-password',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+};
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
