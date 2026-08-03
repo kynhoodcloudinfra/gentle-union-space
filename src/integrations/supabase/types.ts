@@ -272,6 +272,10 @@ export type Database = {
         }[]
       }
       soundex: { Args: { "": string }; Returns: string }
+      start_visit: {
+        Args: { p_phone: string; p_session_id: string }
+        Returns: undefined
+      }
       submit_answer: {
         Args: {
           p_answer_given: string
@@ -288,6 +292,10 @@ export type Database = {
         }[]
       }
       text_soundex: { Args: { "": string }; Returns: string }
+      touch_visit: {
+        Args: { p_played?: boolean; p_session_id: string }
+        Returns: undefined
+      }
       update_leaderboard_identity: {
         Args: {
           p_avatar_id?: number
