@@ -12,7 +12,7 @@ import { OrnamentalDivider } from '@/components/OrnamentalDivider';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { supabase, getCurrentMonth, getTodayDayNumber } from '@/lib/supabase';
-import { Music, Flame, Sparkles, Play, Check, Gift, Lock } from 'lucide-react';
+import { Music, Flame, Sparkles, Play, Check, Gift, Lock, MessageCircle } from 'lucide-react';
 import devaConcertPoster from '@/assets/deva-concert.jpeg.asset.json';
 import { WinnerRevealCard } from '@/components/WinnerRevealCard';
 import { RewardsComingSoonCard } from '@/components/RewardsComingSoonCard';
@@ -233,21 +233,33 @@ export default function Index() {
 
           {/* Play CTA — prominent */}
           {COMING_SOON_MODE ? (
-            <button
-              onClick={() => setQuizOpen(true)}
-              className="w-full bg-gradient-to-br from-[hsl(345,55%,28%)] via-[hsl(0,55%,22%)] to-[hsl(0,55%,15%)] border border-accent/40 rounded-2xl p-5 mb-6 film-grain text-left relative overflow-hidden group hover:border-accent transition-all hover:shadow-lg hover:shadow-accent/20"
-            >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(30,30%,72%,0.15),transparent_60%)] pointer-events-none" />
-              <div className="flex items-center gap-4 relative">
-                <div className="w-14 h-14 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center group-hover:bg-accent/30 transition-colors">
-                  <Sparkles size={22} className="text-accent" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-serif text-xl text-accent gold-glow">New Season Coming Soon</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">New look, new rewards — tap to see what's next</p>
-                </div>
+            <div className="bg-gradient-to-br from-card via-card to-background border border-accent/40 rounded-2xl p-6 mb-6 film-grain text-center">
+              <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
+                <Sparkles size={28} className="text-accent animate-pulse" />
               </div>
-            </button>
+              <h2 className="font-serif text-2xl text-accent gold-glow mb-2">Something New Is Coming</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                We're giving Paattu Puzzle a fresh new look — with new rewards and new ways to play.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-1.5 mb-5">
+                Stay tuned. We'll be back very soon.
+              </p>
+
+              <OrnamentalDivider className="mb-5" />
+
+              <p className="text-xs text-muted-foreground mb-4">
+                Got an idea for a reward, feature, or question? We'd love to hear it.
+              </p>
+              <a
+                href="https://wa.me/918220850225?text=Hey!%20I%20have%20a%20suggestion%20for%20Paattu%20Puzzle%3A%20"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 rounded-full bg-accent text-accent-foreground font-serif text-sm px-5 py-3 shadow-lg shadow-accent/20 animate-cta-pulse hover:scale-[1.02] transition-transform"
+              >
+                <MessageCircle size={16} />
+                Share Your Suggestions With Us
+              </a>
+            </div>
           ) : playedToday ? (
             <div className="bg-gradient-to-br from-[hsl(0,45%,22%)] to-[hsl(0,55%,15%)] border border-accent/30 rounded-2xl p-4 mb-6 film-grain text-center">
               <Check size={28} className="mx-auto text-accent mb-1" />
@@ -281,41 +293,44 @@ export default function Index() {
             </button>
           )}
 
-          {/* Reward / winner slot */}
-          {revealDay && currentWinner ? (
-            <WinnerRevealCard winner={currentWinner} isMe={iAmWinner} />
-          ) : postReveal ? (
-            <RewardsComingSoonCard previousWinner={previousWinner} />
-          ) : (
-            <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/40 rounded-2xl overflow-hidden mb-6 film-grain shadow-lg shadow-accent/10">
-              {/* Top reward banner */}
-              <div className="relative bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-b border-accent/30 py-3 px-4">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(40,55%,55%,0.15),transparent_70%)] pointer-events-none" />
-                <div className="relative flex items-center justify-center gap-2">
-                  <Gift size={16} className="text-accent" />
-                  <span className="text-sm tracking-[0.35em] uppercase text-accent font-serif font-bold">THE REWARD</span>
-                  <Gift size={16} className="text-accent" />
+          {/* Reward / winner slot — suspended during the relaunch; old reward
+              content shouldn't show alongside the coming-soon messaging. */}
+          {!COMING_SOON_MODE && (
+            revealDay && currentWinner ? (
+              <WinnerRevealCard winner={currentWinner} isMe={iAmWinner} />
+            ) : postReveal ? (
+              <RewardsComingSoonCard previousWinner={previousWinner} />
+            ) : (
+              <div className="relative bg-gradient-to-br from-card via-card to-background border border-accent/40 rounded-2xl overflow-hidden mb-6 film-grain shadow-lg shadow-accent/10">
+                {/* Top reward banner */}
+                <div className="relative bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-b border-accent/30 py-3 px-4">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(40,55%,55%,0.15),transparent_70%)] pointer-events-none" />
+                  <div className="relative flex items-center justify-center gap-2">
+                    <Gift size={16} className="text-accent" />
+                    <span className="text-sm tracking-[0.35em] uppercase text-accent font-serif font-bold">THE REWARD</span>
+                    <Gift size={16} className="text-accent" />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <img
+                    src={devaConcertPoster.url}
+                    alt="Thenisai Baasha Deva — Live in Chennai concert poster"
+                    className="w-full h-auto block"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+                </div>
+                <div className="relative px-4 pt-3 pb-4">
+                  <h2 className="font-serif text-xl font-bold text-accent gold-glow leading-tight tracking-wide mb-1">
+                    WIN TWO EXCLUSIVE TICKETS&nbsp;
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                    Get ready! The top player wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19, YMCA Nandanam</span>&nbsp;🎶
+                  </p>
                 </div>
               </div>
-
-              <div className="relative">
-                <img
-                  src={devaConcertPoster.url}
-                  alt="Thenisai Baasha Deva — Live in Chennai concert poster"
-                  className="w-full h-auto block"
-                  loading="lazy"
-                />
-                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
-              </div>
-              <div className="relative px-4 pt-3 pb-4">
-                <h2 className="font-serif text-xl font-bold text-accent gold-glow leading-tight tracking-wide mb-1">
-                  WIN TWO EXCLUSIVE TICKETS&nbsp;
-                </h2>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                  Get ready! The top player wins <span className="text-accent font-medium">2 exclusive tickets</span> to the legendary <span className="text-accent font-medium">Thenisai Baasha Deva</span> concert on <span className="text-accent font-medium">July 19, YMCA Nandanam</span>&nbsp;🎶
-                </p>
-              </div>
-            </div>
+            )
           )}
 
 
