@@ -20,6 +20,8 @@ async function isStale(): Promise<boolean> {
  * server-side redeploys never reach them. This polls a small no-store
  * version.json against the version baked into the currently running bundle,
  * and force-reloads once — bypassing the cache — the moment they diverge.
+ * Also nudges the browser to check public/sw.js for an update on the same
+ * cadence — browsers only do this roughly once every 24h on their own.
  */
 export function useStaleBundleGuard() {
   useEffect(() => {
@@ -29,6 +31,13 @@ export function useStaleBundleGuard() {
       if (cancelled || document.hidden) return;
       if (await isStale()) {
         window.location.reload();
+        return;
+      }
+      try {
+        const reg = await navigator.serviceWorker?.getRegistration();
+        reg?.update();
+      } catch {
+        // Best-effort — the version.json check above is the real guard.
       }
     };
 
