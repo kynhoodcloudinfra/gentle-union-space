@@ -257,7 +257,7 @@ export function AnalyticsTab() {
             <h3 className="font-serif text-lg text-accent">All Dates</h3>
             <Button
               size="sm"
-              onClick={() => downloadAllDatesExcel(allDates)}
+              onClick={() => downloadAllDatesExcel(allDates, trend)}
               className="bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
             >
               <Download size={14} className="mr-1" />
