@@ -22,10 +22,17 @@ function trendRow(b: TrendBucket) {
   };
 }
 
+export type TrendData = { weekly: TrendBucket[]; monthly: TrendBucket[] };
+
+function appendTrendSheets(wb: XLSX.WorkBook, trend?: TrendData | null) {
+  if (!trend) return;
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trend.weekly.map(trendRow)), 'Weekly Trend');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trend.monthly.map(trendRow)), 'Monthly Trend');
+}
+
 export function downloadTrendExcel(weekly: TrendBucket[], monthly: TrendBucket[]) {
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weekly.map(trendRow)), 'Weekly Trend');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthly.map(trendRow)), 'Monthly Trend');
+  appendTrendSheets(wb, { weekly, monthly });
   const today = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `paattu-trend-analytics-${today}.xlsx`);
 }
