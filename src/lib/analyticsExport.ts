@@ -22,10 +22,17 @@ function trendRow(b: TrendBucket) {
   };
 }
 
+export type TrendData = { weekly: TrendBucket[]; monthly: TrendBucket[] };
+
+function appendTrendSheets(wb: XLSX.WorkBook, trend?: TrendData | null) {
+  if (!trend) return;
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trend.weekly.map(trendRow)), 'Weekly Trend');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trend.monthly.map(trendRow)), 'Monthly Trend');
+}
+
 export function downloadTrendExcel(weekly: TrendBucket[], monthly: TrendBucket[]) {
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weekly.map(trendRow)), 'Weekly Trend');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthly.map(trendRow)), 'Monthly Trend');
+  appendTrendSheets(wb, { weekly, monthly });
   const today = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `paattu-trend-analytics-${today}.xlsx`);
 }
@@ -42,7 +49,7 @@ function toSheetRows(players: PlayerRow[]) {
   }));
 }
 
-export function downloadAnalyticsExcel(result: AnalyticsResult) {
+export function downloadAnalyticsExcel(result: AnalyticsResult, trend?: TrendData | null) {
   const wb = XLSX.utils.book_new();
   const rate = retentionRate(result);
 
@@ -68,11 +75,12 @@ export function downloadAnalyticsExcel(result: AnalyticsResult) {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.activeStreak)), 'Active Streak');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.retained)), 'Retained');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.didntComeBack)), "Didn't Come Back");
+  appendTrendSheets(wb, trend);
 
   XLSX.writeFile(wb, `paattu-analytics-${result.date}.xlsx`);
 }
 
-export function downloadAllDatesExcel(rows: DailySummary[]) {
+export function downloadAllDatesExcel(rows: DailySummary[], trend?: TrendData | null) {
   const wb = XLSX.utils.book_new();
   const sheet = rows.map(r => ({
     'Date (IST)': r.date,
@@ -85,6 +93,7 @@ export function downloadAllDatesExcel(rows: DailySummary[]) {
     "Didn't Come Back": r.didntComeBack,
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet), 'Daily Summary');
+  appendTrendSheets(wb, trend);
   const today = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `paattu-analytics-all-dates-${today}.xlsx`);
 }
