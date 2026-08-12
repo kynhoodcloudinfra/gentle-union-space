@@ -169,8 +169,8 @@ export function AnalyticsTab() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => downloadEverythingExcel(data, allDates, trend)}
-            disabled={!data && allDates.length === 0 && !trend}
+            onClick={() => downloadEverythingExcel(data, allDates ?? [], trend)}
+            disabled={!data && !allDates?.length && !trend}
             className="font-serif"
           >
             <Download size={14} className="mr-1" />
