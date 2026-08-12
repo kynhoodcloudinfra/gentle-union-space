@@ -168,7 +168,7 @@ export function AnalyticsTab() {
           </Button>
           <Button
             size="sm"
-            onClick={() => data && downloadAnalyticsExcel(data)}
+            onClick={() => data && downloadAnalyticsExcel(data, trend)}
             disabled={!data}
             className="bg-accent text-accent-foreground hover:bg-accent/90 font-serif"
           >
