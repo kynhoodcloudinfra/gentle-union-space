@@ -10,7 +10,7 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { cn } from '@/lib/utils';
 import { getDailyAnalytics, getAllDatesAnalytics, retentionRate, type AnalyticsResult, type PlayerRow, type DailySummary } from '@/lib/analytics';
 import { getTrendAnalytics, formatDuration, type TrendBucket } from '@/lib/trendAnalytics';
-import { downloadAnalyticsExcel, downloadAllDatesExcel, downloadTrendExcel } from '@/lib/analyticsExport';
+import { downloadAnalyticsExcel, downloadAllDatesExcel, downloadTrendExcel, downloadEverythingExcel } from '@/lib/analyticsExport';
 
 function MetricCard({
   icon: Icon,
@@ -167,6 +167,16 @@ export function AnalyticsTab() {
             Refresh
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadEverythingExcel(data, allDates, trend)}
+            disabled={!data && allDates.length === 0 && !trend}
+            className="font-serif"
+          >
+            <Download size={14} className="mr-1" />
+            Download All (1 file)
+          </Button>
+          <Button
             size="sm"
             onClick={() => data && downloadAnalyticsExcel(data, trend)}
             disabled={!data}
@@ -175,6 +185,7 @@ export function AnalyticsTab() {
             <Download size={14} className="mr-1" />
             Excel
           </Button>
+
         </div>
       </div>
       <OrnamentalDivider className="my-2" />
