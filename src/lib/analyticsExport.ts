@@ -49,7 +49,7 @@ function toSheetRows(players: PlayerRow[]) {
   }));
 }
 
-export function downloadAnalyticsExcel(result: AnalyticsResult) {
+export function downloadAnalyticsExcel(result: AnalyticsResult, trend?: TrendData | null) {
   const wb = XLSX.utils.book_new();
   const rate = retentionRate(result);
 
