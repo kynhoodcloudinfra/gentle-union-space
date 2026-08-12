@@ -97,3 +97,56 @@ export function downloadAllDatesExcel(rows: DailySummary[], trend?: TrendData | 
   const today = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `paattu-analytics-all-dates-${today}.xlsx`);
 }
+
+export function downloadEverythingExcel(
+  result: AnalyticsResult | null,
+  allDates: DailySummary[],
+  trend?: TrendData | null,
+) {
+  const wb = XLSX.utils.book_new();
+
+  if (result) {
+    const rate = retentionRate(result);
+    const summary = [
+      { Metric: 'Report Date (IST)', Value: result.date },
+      { Metric: 'Generated At', Value: new Date(result.generatedAt).toLocaleString() },
+      { Metric: 'Players Played Today', Value: result.playedToday.length },
+      { Metric: 'New To The Link', Value: result.newUsers.length },
+      { Metric: 'Existing Users With Active Streak (>=2)', Value: result.activeStreak.length },
+      {
+        Metric: 'Retention Rate (D-1 -> D)',
+        Value:
+          rate === null
+            ? 'N/A (no players yesterday)'
+            : `${rate.toFixed(1)}% (${result.retained.length}/${result.retentionDenominator})`,
+      },
+      { Metric: "Didn't Come Back", Value: result.didntComeBack.length },
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Summary');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.playedToday)), 'Played Today');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.newUsers)), 'New Users');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.activeStreak)), 'Active Streak');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.retained)), 'Retained');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toSheetRows(result.didntComeBack)), "Didn't Come Back");
+  }
+
+  if (allDates.length > 0) {
+    const sheet = allDates.map(r => ({
+      'Date (IST)': r.date,
+      Played: r.played,
+      'New Users': r.newUsers,
+      'Active Streak (>=2)': r.activeStreak,
+      Retained: r.retained,
+      'Played D-1': r.retentionDenominator,
+      'Retention %': r.retentionRate === null ? 'N/A' : `${r.retentionRate.toFixed(1)}%`,
+      "Didn't Come Back": r.didntComeBack,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet), 'All Dates');
+  }
+
+  appendTrendSheets(wb, trend);
+
+  if (wb.SheetNames.length === 0) return;
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `paattu-analytics-complete-${today}.xlsx`);
+}
