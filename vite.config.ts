@@ -13,13 +13,6 @@ const BUILD_VERSION = String(Date.now());
 function versionFilePlugin(): Plugin {
   return {
     name: "version-file",
-    transformIndexHtml: {
-      order: "pre",
-      handler() {
-        const bootstrap = `(function(){var V=${JSON.stringify(BUILD_VERSION)},K='_v',P='stale-bundle-reload:';function clean(){try{var u=new URL(location.href);if(u.searchParams.get(K)===V){u.searchParams.delete(K);history.replaceState(history.state,'',u.pathname+u.search+u.hash)}}catch(e){}}fetch('/version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){if(!d||typeof d.version!=='string'||d.version===V){clean();return}var u=new URL(location.href);if(u.searchParams.get(K)===d.version)return;try{if(sessionStorage.getItem(P+d.version))return;sessionStorage.setItem(P+d.version,'1')}catch(e){}var purge='caches'in window?caches.keys().then(function(ns){return Promise.allSettled(ns.map(function(n){return caches.delete(n)}))}).catch(function(){}):Promise.resolve();return purge.then(function(){u.searchParams.set(K,d.version);location.replace(u.toString())})}).catch(function(){clean()})})();`;
-        return [{ tag: "script", children: bootstrap, injectTo: "head-prepend" }];
-      },
-    },
     generateBundle() {
       this.emitFile({
         type: "asset",

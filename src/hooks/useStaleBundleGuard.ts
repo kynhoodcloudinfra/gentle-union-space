@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import {
   fetchServerVersion,
   forceFreshBuild,
-  stripCurrentBuildMarker,
 } from '@/lib/updateCoordinator';
 
 const CHECK_INTERVAL_MS = 60 * 1000;
@@ -30,7 +29,6 @@ export function useStaleBundleGuard() {
   useEffect(() => {
     let cancelled = false;
 
-    stripCurrentBuildMarker();
     let checkInProgress = false;
 
     const check = async () => {

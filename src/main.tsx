@@ -2,16 +2,23 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
-import { registerUpdateWorker } from "./lib/updateCoordinator";
+import { registerUpdateWorker, runStartupVersionCheck } from "./lib/updateCoordinator";
 
-const rootElement = document.getElementById("root");
-if (rootElement) {
+async function startApplication() {
+  const shouldStart = await runStartupVersionCheck();
+  if (!shouldStart) return;
+
+  const rootElement = document.getElementById("root");
+  if (!rootElement) return;
+
   createRoot(rootElement).render(
     <HelmetProvider>
       <App />
-    </HelmetProvider>
+    </HelmetProvider>,
   );
 }
+
+void startApplication();
 
 // See public/sw.js: this exists purely to force already-open stale sessions
 // to reload the moment a new deploy is discovered. updateViaCache: 'none'

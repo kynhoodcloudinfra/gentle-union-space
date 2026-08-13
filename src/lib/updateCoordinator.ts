@@ -54,15 +54,25 @@ export async function forceFreshBuild(serverVersion: string) {
   window.location.replace(url.toString());
 }
 
-export function stripCurrentBuildMarker() {
+export function stripBuildMarker() {
   try {
     const url = new URL(window.location.href);
-    if (url.searchParams.get(CACHE_BUSTER) !== __APP_BUILD_VERSION__) return;
+    if (!url.searchParams.has(CACHE_BUSTER)) return;
     url.searchParams.delete(CACHE_BUSTER);
     window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
   } catch {
     // Cosmetic cleanup only.
   }
+}
+
+export async function runStartupVersionCheck() {
+  const serverVersion = await fetchServerVersion();
+  if (serverVersion && serverVersion !== __APP_BUILD_VERSION__) {
+    await forceFreshBuild(serverVersion);
+    return false;
+  }
+  stripBuildMarker();
+  return true;
 }
 
 function serviceWorkersAllowed() {
