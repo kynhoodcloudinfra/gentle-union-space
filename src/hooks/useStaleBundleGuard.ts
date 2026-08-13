@@ -1,73 +1,11 @@
 import { useEffect } from 'react';
+import {
+  fetchServerVersion,
+  forceFreshBuild,
+  stripCurrentBuildMarker,
+} from '@/lib/updateCoordinator';
 
 const CHECK_INTERVAL_MS = 60 * 1000;
-const RELOAD_FLAG_PREFIX = 'stale-bundle-reload:';
-
-async function fetchServerVersion(): Promise<string | null> {
-  try {
-    const res = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    const { version } = await res.json();
-    return typeof version === 'string' ? version : null;
-  } catch {
-    // Network hiccup or offline — don't reload on a guess.
-    return null;
-  }
-}
-
-async function purgeCaches() {
-  try {
-    if (!('caches' in window)) return;
-    const names = await caches.keys();
-    await Promise.allSettled(names.map((n) => caches.delete(n)));
-  } catch {
-    // Best effort.
-  }
-}
-
-/**
- * A plain location.reload() is not enough on iOS/WebKit — it can be served
- * the very same cached index.html, which re-loads the identical stale bundle
- * (potentially forever). Navigating to a URL the browser has never seen
- * (?_v=<serverVersion>) forces a real network fetch of the HTML document.
- * The marker is stripped from the address bar once the fresh bundle boots.
- */
-async function forceFreshLoad(serverVersion: string) {
-  const flag = `${RELOAD_FLAG_PREFIX}${serverVersion}`;
-  try {
-    // One-shot per server version: a genuinely broken deploy must not put
-    // clients into an endless reload loop.
-    if (sessionStorage.getItem(flag)) return;
-    sessionStorage.setItem(flag, '1');
-  } catch {
-    // Private mode / storage blocked — proceed anyway, the ?_v marker in the
-    // URL still prevents an immediate second pass for the same version.
-    if (new URL(window.location.href).searchParams.get('_v') === serverVersion) return;
-  }
-
-  await purgeCaches();
-  try {
-    const reg = await navigator.serviceWorker?.getRegistration();
-    await reg?.update();
-  } catch {
-    // Best effort.
-  }
-
-  const url = new URL(window.location.href);
-  url.searchParams.set('_v', serverVersion);
-  window.location.replace(url.toString());
-}
-
-function stripCacheBuster() {
-  try {
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has('_v')) return;
-    url.searchParams.delete('_v');
-    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-  } catch {
-    // Ignore.
-  }
-}
 
 /**
  * Some users end up stuck on a stale cached JS bundle indefinitely (browser
@@ -92,14 +30,20 @@ export function useStaleBundleGuard() {
   useEffect(() => {
     let cancelled = false;
 
-    stripCacheBuster();
+    stripCurrentBuildMarker();
+    let checkInProgress = false;
 
     const check = async () => {
-      if (cancelled || document.hidden) return;
+      if (cancelled || document.hidden || checkInProgress) return;
+      checkInProgress = true;
       const serverVersion = await fetchServerVersion();
-      if (cancelled) return;
+      if (cancelled) {
+        checkInProgress = false;
+        return;
+      }
       if (serverVersion && serverVersion !== __APP_BUILD_VERSION__) {
-        await forceFreshLoad(serverVersion);
+        await forceFreshBuild(serverVersion);
+        checkInProgress = false;
         return;
       }
       try {
@@ -108,10 +52,14 @@ export function useStaleBundleGuard() {
       } catch {
         // Best-effort — the version.json check above is the real guard.
       }
+      checkInProgress = false;
     };
 
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) check();
+    };
+    const onWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'UPDATE_READY') check();
     };
 
     // Check on load, whenever the tab regains focus or the window is focused,
@@ -122,6 +70,7 @@ export function useStaleBundleGuard() {
     window.addEventListener('pageshow', onPageShow);
     window.addEventListener('focus', check);
     window.addEventListener('online', check);
+    navigator.serviceWorker?.addEventListener('message', onWorkerMessage);
     const interval = setInterval(check, CHECK_INTERVAL_MS);
 
     return () => {
@@ -130,6 +79,7 @@ export function useStaleBundleGuard() {
       window.removeEventListener('pageshow', onPageShow);
       window.removeEventListener('focus', check);
       window.removeEventListener('online', check);
+      navigator.serviceWorker?.removeEventListener('message', onWorkerMessage);
       clearInterval(interval);
     };
   }, []);
